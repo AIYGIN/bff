@@ -37,7 +37,7 @@ Issue に必ず含める項目:
 
 JSON schema:
 {
-  "next_agent": "issue_responder|mock_tester|mock_implementer|reviewer",
+  "next_agent": "mock_issue_responder|mock_tester|mock_implementer|mock_reviewer",
   "issue_title": "API IF: <method> <path>",
   "issue_body": "GitHub Issue body markdown",
   "context_files": ["docs/ai-api-harness.md"],
