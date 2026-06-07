@@ -1,0 +1,35 @@
+# --- Destructive filesystem operations ---
+prefix_rule(
+    pattern=["mkfs", "dd if=", "wipefs"],
+    decision="forbidden",
+    justification="Storage destructive operation"
+)
+
+# --- Destructive git operations ---
+prefix_rule(
+    pattern=["git push --force", "git push -f", "git push --force-with-lease"],
+    decision="forbidden",
+    justification="History rewrite is not allowed"
+)
+
+# --- GitHub destructive operations ---
+prefix_rule(
+    pattern=["gh repo delete"],
+    decision="forbidden",
+    justification="Repository deletion is irreversible"
+)
+
+prefix_rule(
+    pattern=["gh secret set", "gh secret delete"],
+    justification="Secret changes require explicit human approval"
+)
+
+prefix_rule(
+    pattern=["rm -rf", "sudo rm"],
+    justification="Destructive deletion requires explicit human approval"
+)
+
+prefix_rule(
+    pattern=["sudo"],
+    justification="Privilege escalation requires explicit human approval"
+)

@@ -1,0 +1,102 @@
+name: API IF
+description: PM が BFF API の公開 IF を決めるための Issue
+title: "API IF: <METHOD> <PATH>"
+labels:
+  - api-if
+  - pm
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PM はこのテンプレートで API IF を定義してください。
+        人間はコメントで IF をレビュー・補足してください。
+        Controller mock PR の完了条件は Swagger/OpenAPI で契約が表現されることです。
+  - type: input
+    id: api_name
+    attributes:
+      label: API 名
+      placeholder: ユーザー取得
+    validations:
+      required: true
+  - type: dropdown
+    id: method
+    attributes:
+      label: HTTP method
+      options:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+    validations:
+      required: true
+  - type: input
+    id: path
+    attributes:
+      label: Path
+      placeholder: /users/{userId}
+    validations:
+      required: true
+  - type: textarea
+    id: params
+    attributes:
+      label: Params / Query / Body
+      description: path params, query, request body を記載する。
+      value: |
+        path params:
+        - 
+
+        query:
+        - 
+
+        request body:
+        - none
+  - type: textarea
+    id: response
+    attributes:
+      label: Response DTO
+      description: DTO schema と example を記載する。
+      value: |
+        status: 200
+        schema:
+        ```json
+        {
+        }
+        ```
+  - type: textarea
+    id: errors
+    attributes:
+      label: Error responses
+      value: |
+        - 400 Bad Request:
+        - 401 Unauthorized:
+        - 404 Not Found:
+        - 500 Internal Server Error:
+  - type: textarea
+    id: swagger
+    attributes:
+      label: Swagger / OpenAPI
+      value: |
+        tag:
+        summary:
+        description:
+  - type: textarea
+    id: mock
+    attributes:
+      label: Controller mock response
+      value: |
+        ```json
+        {
+        }
+        ```
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] Controller test が request と mock response を確認している
+        - [ ] OpenAPI に endpoint が表示される
+        - [ ] OpenAPI に DTO schema が表示される
+        - [ ] OpenAPI に error response が表示される
+        - [ ] Entity が OpenAPI に公開されない
+        - [ ] lint / typecheck / test / build が通る

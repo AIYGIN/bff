@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "typecheck": "tsc --noEmit",
+    "check": "pnpm lint && pnpm typecheck && pnpm test --runInBand && pnpm build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
