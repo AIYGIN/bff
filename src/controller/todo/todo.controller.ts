@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
-import { CreateTodoDocs } from "../docs/todos.docs";
-import { CreateTodoRequestDto } from "../interface/dto/create-todo-request.dto";
-import { TodoDto } from "../interface/dto/todo.dto";
+import { CreateTodoDocs } from "../../docs/todos.docs";
+import { CreateTodoRequestDto } from "../../interface/dto/todo/create-todo-request.dto";
+import { TodoDto } from "../../interface/dto/todo/todo.dto";
 
 @Controller("todos")
 export class TodoController {

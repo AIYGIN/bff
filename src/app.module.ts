@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { TodoModule } from "./controller/todo.module";
+import { TodoModule } from "./controller/todo/todo.module";
 import { UserModule } from "./controller/user.module";
 
 @Module({

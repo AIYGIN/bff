@@ -3,7 +3,7 @@ import {
   HttpException,
   ValidationPipe,
 } from "@nestjs/common";
-import { CreateTodoRequestDto } from "../interface/dto/create-todo-request.dto";
+import { CreateTodoRequestDto } from "../../interface/dto/todo/create-todo-request.dto";
 import { TodoController } from "./todo.controller";
 
 describe("TodoController", () => {

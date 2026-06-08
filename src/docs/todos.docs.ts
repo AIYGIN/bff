@@ -8,8 +8,8 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { ErrorResponseSchema } from "./schemas/error-response.schema";
-import { CreateTodoRequestDto } from "../interface/dto/create-todo-request.dto";
-import { TodoDto } from "../interface/dto/todo.dto";
+import { CreateTodoRequestDto } from "../interface/dto/todo/create-todo-request.dto";
+import { TodoDto } from "../interface/dto/todo/todo.dto";
 
 export const CreateTodoDocs = () =>
   applyDecorators(
