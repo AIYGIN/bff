@@ -1,5 +1,18 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
-import { CreateTodoDocs, GetTodosDocs } from "../../docs/todos.docs";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from "@nestjs/common";
+import {
+  CreateTodoDocs,
+  DeleteTodoDocs,
+  GetTodosDocs,
+} from "../../docs/todos.docs";
 import { CreateTodoRequestDto } from "../../interface/dto/todo/create-todo-request.dto";
 import { TodoDto } from "../../interface/dto/todo/todo.dto";
 
@@ -33,5 +46,12 @@ export class TodoController {
       completed: false,
       createdAt: "2026-06-05T02:00:00.000Z",
     });
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @DeleteTodoDocs()
+  deleteTodo(@Param("id") id: string): void {
+    void id;
   }
 }

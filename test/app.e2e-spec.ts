@@ -88,6 +88,7 @@ describe("Users API (e2e)", () => {
     expect(Object.keys(openApiDocument.paths)).toEqual([
       "/users/{userId}",
       "/todos",
+      "/todos/{id}",
     ]);
     expect(openApiDocument.paths["/users/{userId}"]?.get).toMatchObject({
       summary: "ユーザー取得",
@@ -141,6 +142,14 @@ describe("Users API (e2e)", () => {
           createdAt: "2026-06-05T01:00:00.000Z",
         },
       ]);
+  });
+
+  it("DELETE /todos/:id returns 204 with no response body", async () => {
+    const response = await request(app.getHttpServer())
+      .delete("/todos/todo-new")
+      .expect(204);
+
+    expect(response.text).toBe("");
   });
 
   it("validates POST /todos request body", async () => {
@@ -260,6 +269,70 @@ describe("Users API (e2e)", () => {
     ).toBeUndefined();
   });
 
+  it("publishes DELETE /todos/:id in the OpenAPI document", () => {
+    const operation = openApiDocument.paths["/todos/{id}"]?.delete;
+
+    expect(operation).toMatchObject({
+      summary: "TODO削除",
+      description:
+        "指定したTODOを削除する。成功時はレスポンス body を返さない。",
+      tags: ["todos"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: {
+            type: "string",
+            example: "todo-new",
+          },
+        },
+      ],
+      responses: {
+        204: {
+          description: "TODO削除成功",
+        },
+        404: {
+          description: "TODOが見つかりません",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
+        500: {
+          description: "サーバーエラー",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(operation?.responses[204]).not.toHaveProperty("content");
+    expect(
+      openApiDocument.components?.schemas?.ErrorResponseSchema,
+    ).toMatchObject({
+      required: ["message"],
+      properties: {
+        message: {
+          type: "string",
+        },
+      },
+    });
+    expect(
+      openApiDocument.components?.schemas?.GetUserEntityRequest,
+    ).toBeUndefined();
+    expect(
+      openApiDocument.components?.schemas?.GetUserEntityResponse,
+    ).toBeUndefined();
+  });
+
   it("serves Swagger UI at /docs", () => {
     return request(app.getHttpServer())
       .get("/docs")
@@ -275,12 +348,17 @@ describe("Users API (e2e)", () => {
 
     const document = response.body as OpenAPIObject;
 
-    expect(Object.keys(document.paths)).toEqual(["/users/{userId}", "/todos"]);
+    expect(Object.keys(document.paths)).toEqual([
+      "/users/{userId}",
+      "/todos",
+      "/todos/{id}",
+    ]);
     expect(document.paths["/users/{userId}"]).toBeDefined();
     expect(document.paths["/users/{userId}"]?.get?.tags).toEqual(["users"]);
     expect(document.paths["/todos"]).toBeDefined();
     expect(document.paths["/todos"]?.get?.tags).toEqual(["todos"]);
     expect(document.paths["/todos"]?.post?.tags).toEqual(["todos"]);
+    expect(document.paths["/todos/{id}"]?.delete?.tags).toEqual(["todos"]);
     expect(document.components?.schemas?.UserDto).toBeDefined();
     expect(document.components?.schemas?.CreateTodoRequestDto).toBeDefined();
     expect(document.components?.schemas?.TodoDto).toBeDefined();

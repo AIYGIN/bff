@@ -51,6 +51,12 @@ describe("TodoController", () => {
     });
   });
 
+  it("accepts the TODO id and returns no response body when deleting", () => {
+    const controller = new TodoController();
+
+    expect(controller.deleteTodo("todo-new")).toBeUndefined();
+  });
+
   const expectValidationMessage = async (
     value: object,
     message: string,

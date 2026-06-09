@@ -4,8 +4,11 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
 import { ErrorResponseSchema } from "./schemas/error-response.schema";
@@ -47,6 +50,33 @@ export const CreateTodoDocs = () =>
     }),
     ApiBadRequestResponse({
       description: "リクエストボディのバリデーションエラー",
+      type: ErrorResponseSchema,
+    }),
+    ApiInternalServerErrorResponse({
+      description: "サーバーエラー",
+      type: ErrorResponseSchema,
+    }),
+  );
+
+export const DeleteTodoDocs = () =>
+  applyDecorators(
+    ApiTags("todos"),
+    ApiOperation({
+      summary: "TODO削除",
+      description:
+        "指定したTODOを削除する。成功時はレスポンス body を返さない。",
+    }),
+    ApiParam({
+      name: "id",
+      description: "削除対象 TODO ID",
+      required: true,
+      example: "todo-new",
+    }),
+    ApiNoContentResponse({
+      description: "TODO削除成功",
+    }),
+    ApiNotFoundResponse({
+      description: "TODOが見つかりません",
       type: ErrorResponseSchema,
     }),
     ApiInternalServerErrorResponse({
