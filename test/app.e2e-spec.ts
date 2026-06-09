@@ -123,6 +123,26 @@ describe("Users API (e2e)", () => {
       });
   });
 
+  it("GET /todos returns TODO mocks ordered by newest createdAt first", () => {
+    return request(app.getHttpServer())
+      .get("/todos")
+      .expect(200)
+      .expect([
+        {
+          id: "todo-new",
+          title: "新しいTODO",
+          completed: false,
+          createdAt: "2026-06-05T02:00:00.000Z",
+        },
+        {
+          id: "todo-old",
+          title: "完了済みTODO",
+          completed: true,
+          createdAt: "2026-06-05T01:00:00.000Z",
+        },
+      ]);
+  });
+
   it("validates POST /todos request body", async () => {
     const missingTitle = await request(app.getHttpServer())
       .post("/todos")
@@ -207,6 +227,39 @@ describe("Users API (e2e)", () => {
     ).toBeUndefined();
   });
 
+  it("publishes GET /todos in the OpenAPI document", () => {
+    expect(openApiDocument.paths["/todos"]?.get).toMatchObject({
+      summary: "TODO一覧取得",
+      description: "TODO一覧を作成日時の新しい順で取得する。",
+      tags: ["todos"],
+      responses: {
+        200: {
+          description: "TODO一覧",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/TodoDto",
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "サーバーエラー",
+        },
+      },
+    });
+    expect(openApiDocument.components?.schemas?.TodoDto).toBeDefined();
+    expect(
+      openApiDocument.components?.schemas?.GetUserEntityRequest,
+    ).toBeUndefined();
+    expect(
+      openApiDocument.components?.schemas?.GetUserEntityResponse,
+    ).toBeUndefined();
+  });
+
   it("serves Swagger UI at /docs", () => {
     return request(app.getHttpServer())
       .get("/docs")
@@ -226,6 +279,7 @@ describe("Users API (e2e)", () => {
     expect(document.paths["/users/{userId}"]).toBeDefined();
     expect(document.paths["/users/{userId}"]?.get?.tags).toEqual(["users"]);
     expect(document.paths["/todos"]).toBeDefined();
+    expect(document.paths["/todos"]?.get?.tags).toEqual(["todos"]);
     expect(document.paths["/todos"]?.post?.tags).toEqual(["todos"]);
     expect(document.components?.schemas?.UserDto).toBeDefined();
     expect(document.components?.schemas?.CreateTodoRequestDto).toBeDefined();
