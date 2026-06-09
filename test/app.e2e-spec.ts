@@ -88,6 +88,7 @@ describe("Users API (e2e)", () => {
     expect(Object.keys(openApiDocument.paths)).toEqual([
       "/users/{userId}",
       "/todos",
+      "/todos/{id}",
     ]);
     expect(openApiDocument.paths["/users/{userId}"]?.get).toMatchObject({
       summary: "ユーザー取得",
@@ -144,6 +145,36 @@ describe("Users API (e2e)", () => {
     ).toBe(true);
     expect((tooLongTitle.body as { message?: unknown[] }).message).toContain(
       "TODOは80文字以内で入力してください",
+    );
+  });
+
+  it("PATCH /todos/:id returns the updated TODO mock", () => {
+    return request(app.getHttpServer())
+      .patch("/todos/todo-123")
+      .send({ completed: true })
+      .expect(200)
+      .expect({
+        id: "todo-new",
+        title: "新しいTODO",
+        completed: true,
+        createdAt: "2026-06-05T02:00:00.000Z",
+      });
+  });
+
+  it.each([
+    ["missing completed", {}],
+    ["non-boolean completed", { completed: "true" }],
+  ])("validates PATCH /todos/:id request body: %s", async (_name, body) => {
+    const response = await request(app.getHttpServer())
+      .patch("/todos/todo-123")
+      .send(body)
+      .expect(400);
+
+    expect(
+      Array.isArray((response.body as { message?: unknown }).message),
+    ).toBe(true);
+    expect((response.body as { message?: unknown[] }).message).toContain(
+      "完了状態を指定してください",
     );
   });
 
@@ -207,6 +238,89 @@ describe("Users API (e2e)", () => {
     ).toBeUndefined();
   });
 
+  it("publishes PATCH /todos/:id in the OpenAPI document", () => {
+    expect(openApiDocument.paths["/api/todos/{id}"]).toBeUndefined();
+    expect(openApiDocument.paths["/todos/{id}"]?.patch).toMatchObject({
+      summary: "TODO完了状態更新",
+      description: "指定したTODOの完了状態を更新し、更新後のTODOを返す。",
+      tags: ["todos"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              $ref: "#/components/schemas/UpdateTodoRequestDto",
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/TodoDto",
+              },
+            },
+          },
+        },
+        400: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
+        404: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(
+      openApiDocument.components?.schemas?.UpdateTodoRequestDto,
+    ).toMatchObject({
+      required: ["completed"],
+      properties: {
+        completed: {
+          type: "boolean",
+        },
+      },
+    });
+    expect(openApiDocument.components?.schemas?.TodoDto).toBeDefined();
+    expect(
+      Object.keys(openApiDocument.components?.schemas ?? {}).some((schema) =>
+        schema.includes("Entity"),
+      ),
+    ).toBe(false);
+  });
+
   it("serves Swagger UI at /docs", () => {
     return request(app.getHttpServer())
       .get("/docs")
@@ -222,7 +336,11 @@ describe("Users API (e2e)", () => {
 
     const document = response.body as OpenAPIObject;
 
-    expect(Object.keys(document.paths)).toEqual(["/users/{userId}", "/todos"]);
+    expect(Object.keys(document.paths)).toEqual([
+      "/users/{userId}",
+      "/todos",
+      "/todos/{id}",
+    ]);
     expect(document.paths["/users/{userId}"]).toBeDefined();
     expect(document.paths["/users/{userId}"]?.get?.tags).toEqual(["users"]);
     expect(document.paths["/todos"]).toBeDefined();

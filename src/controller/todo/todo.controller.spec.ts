@@ -4,6 +4,7 @@ import {
   ValidationPipe,
 } from "@nestjs/common";
 import { CreateTodoRequestDto } from "../../interface/dto/todo/create-todo-request.dto";
+import { UpdateTodoRequestDto } from "../../interface/dto/todo/update-todo-request.dto";
 import { TodoController } from "./todo.controller";
 
 describe("TodoController", () => {
@@ -63,5 +64,44 @@ describe("TodoController", () => {
       { title: "あ".repeat(81) },
       "TODOは80文字以内で入力してください",
     );
+  });
+
+  describe("updateTodo", () => {
+    const controller = new TodoController();
+    const updateBodyMetadata: ArgumentMetadata = {
+      type: "body",
+      metatype: UpdateTodoRequestDto,
+    };
+
+    it("accepts the path id and body and returns the updated TODO mock", async () => {
+      const request = (await validationPipe.transform(
+        { completed: true },
+        updateBodyMetadata,
+      )) as UpdateTodoRequestDto;
+
+      expect(controller.updateTodo("todo-123", request)).toEqual({
+        id: "todo-new",
+        title: "新しいTODO",
+        completed: true,
+        createdAt: "2026-06-05T02:00:00.000Z",
+      });
+    });
+
+    it.each([
+      ["missing completed", {}],
+      ["non-boolean completed", { completed: "true" }],
+    ])("rejects %s", async (_name, value) => {
+      try {
+        await validationPipe.transform(value, updateBodyMetadata);
+        fail("ValidationPipe should reject the request body");
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        const response = (error as HttpException).getResponse() as {
+          message?: unknown;
+        };
+        expect(Array.isArray(response.message)).toBe(true);
+        expect(response.message).toContain("完了状態を指定してください");
+      }
+    });
   });
 });
