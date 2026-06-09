@@ -1,6 +1,17 @@
-import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import {
   CreateTodoDocs,
+  DeleteTodoDocs,
   GetTodosDocs,
   UpdateTodoDocs,
 } from "../../docs/todos.docs";
@@ -38,6 +49,13 @@ export class TodoController {
       completed: false,
       createdAt: "2026-06-05T02:00:00.000Z",
     });
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @DeleteTodoDocs()
+  deleteTodo(@Param("id") id: string): void {
+    void id;
   }
 
   @Patch(":id")
