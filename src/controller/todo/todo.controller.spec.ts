@@ -18,6 +18,25 @@ describe("TodoController", () => {
     metatype: CreateTodoRequestDto,
   };
 
+  it("returns TODO mocks ordered by newest createdAt first", () => {
+    const controller = new TodoController();
+
+    expect(controller.getTodos()).toEqual([
+      {
+        id: "todo-new",
+        title: "新しいTODO",
+        completed: false,
+        createdAt: "2026-06-05T02:00:00.000Z",
+      },
+      {
+        id: "todo-old",
+        title: "完了済みTODO",
+        completed: true,
+        createdAt: "2026-06-05T01:00:00.000Z",
+      },
+    ]);
+  });
+
   it("returns a created TODO mock with the trimmed request title", async () => {
     const controller = new TodoController();
     const request = (await validationPipe.transform(

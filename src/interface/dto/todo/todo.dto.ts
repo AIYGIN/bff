@@ -14,7 +14,7 @@ export class TodoDto {
   title: string;
 
   @ApiProperty({
-    description: "完了状態。作成直後は false",
+    description: "完了状態",
     example: false,
   })
   completed: boolean;
