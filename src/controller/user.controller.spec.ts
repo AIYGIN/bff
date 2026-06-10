@@ -1,5 +1,5 @@
 import { UserDto } from "../interface/dto/user.dto";
-import { UserService } from "../services/user.service";
+import type { UserService } from "../services/user.service";
 import { UserController } from "./user.controller";
 
 describe("UserController", () => {

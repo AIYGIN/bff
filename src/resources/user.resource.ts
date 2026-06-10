@@ -1,10 +1,10 @@
-import { HttpService } from "@nestjs/axios";
+import type { HttpService } from "@nestjs/axios";
 import { Inject, Injectable } from "@nestjs/common";
 import { isAxiosError } from "axios";
 import { firstValueFrom } from "rxjs";
 import { ResourceAccessException } from "../lib/errors/resource-access.exception";
 import {
-  GetUserEntityRequest,
+  type GetUserEntityRequest,
   GetUserEntityResponse,
 } from "../interface/entity/get-user.entity";
 import { USER_API_BASE_URL } from "./user-resource.constants";

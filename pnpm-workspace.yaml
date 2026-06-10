@@ -1,4 +1,5 @@
 allowBuilds:
+  '@biomejs/biome': false
   '@nestjs/core': false
   '@scarf/scarf': false
   lefthook: false

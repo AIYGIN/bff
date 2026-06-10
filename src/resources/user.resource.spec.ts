@@ -1,4 +1,4 @@
-import { HttpService } from "@nestjs/axios";
+import type { HttpService } from "@nestjs/axios";
 import { AxiosError } from "axios";
 import { of, throwError } from "rxjs";
 import { ResourceAccessException } from "../lib/errors/resource-access.exception";

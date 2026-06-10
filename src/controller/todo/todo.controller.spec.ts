@@ -1,5 +1,5 @@
 import {
-  ArgumentMetadata,
+  type ArgumentMetadata,
   HttpException,
   ValidationPipe,
 } from "@nestjs/common";

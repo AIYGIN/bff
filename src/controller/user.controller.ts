@@ -1,8 +1,8 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { GetUserDocs } from "../docs/users.docs";
-import { GetUserRequestDto } from "../interface/dto/get-user-request.dto";
-import { UserDto } from "../interface/dto/user.dto";
-import { UserService } from "../services/user.service";
+import type { GetUserRequestDto } from "../interface/dto/get-user-request.dto";
+import type { UserDto } from "../interface/dto/user.dto";
+import type { UserService } from "../services/user.service";
 
 @Controller("users")
 export class UserController {

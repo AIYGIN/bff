@@ -15,9 +15,9 @@ import {
   GetTodosDocs,
   UpdateTodoDocs,
 } from "../../docs/todos.docs";
-import { CreateTodoRequestDto } from "../../interface/dto/todo/create-todo-request.dto";
+import type { CreateTodoRequestDto } from "../../interface/dto/todo/create-todo-request.dto";
 import { TodoDto } from "../../interface/dto/todo/todo.dto";
-import { UpdateTodoRequestDto } from "../../interface/dto/todo/update-todo-request.dto";
+import type { UpdateTodoRequestDto } from "../../interface/dto/todo/update-todo-request.dto";
 
 @Controller("todos")
 export class TodoController {
