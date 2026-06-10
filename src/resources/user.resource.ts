@@ -1,4 +1,4 @@
-import type { HttpService } from "@nestjs/axios";
+import { HttpService } from "@nestjs/axios";
 import { Inject, Injectable } from "@nestjs/common";
 import { isAxiosError } from "axios";
 import { firstValueFrom } from "rxjs";

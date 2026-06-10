@@ -1,5 +1,5 @@
 import { GetUserEntityResponse } from "../interface/entity/get-user.entity";
-import type { UserResource } from "../resources/user.resource";
+import { UserResource } from "../resources/user.resource";
 import { UserService } from "./user.service";
 
 describe("UserService", () => {

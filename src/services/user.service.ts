@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { GetUserRequestDto } from "../interface/dto/get-user-request.dto";
 import { UserDto } from "../interface/dto/user.dto";
 import { GetUserEntityRequest } from "../interface/entity/get-user.entity";
-import type { UserResource } from "../resources/user.resource";
+import { UserResource } from "../resources/user.resource";
 
 @Injectable()
 export class UserService {
