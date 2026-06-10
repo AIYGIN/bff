@@ -11,6 +11,9 @@
       "recommended": true
     }
   },
+  "organizeImports": {
+    "enabled": false
+  },
   "javascript": {
     "formatter": {
       "enabled": true,
