@@ -8,11 +8,14 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "style": {
+        "useImportType": "off"
+      }
     }
   },
   "organizeImports": {
-    "enabled": false
+    "enabled": true
   },
   "javascript": {
     "formatter": {
