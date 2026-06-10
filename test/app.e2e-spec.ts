@@ -1,9 +1,13 @@
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
-import { Test, TestingModule } from "@nestjs/testing";
-import { NextFunction, Request, Response } from "express";
+import { type INestApplication, ValidationPipe } from "@nestjs/common";
+import {
+  DocumentBuilder,
+  type OpenAPIObject,
+  SwaggerModule,
+} from "@nestjs/swagger";
+import { Test, type TestingModule } from "@nestjs/testing";
+import type { NextFunction, Request, Response } from "express";
 import request from "supertest";
-import { App } from "supertest/types";
+import type { App } from "supertest/types";
 import { AppModule } from "./../src/app.module";
 
 describe("Users API (e2e)", () => {
