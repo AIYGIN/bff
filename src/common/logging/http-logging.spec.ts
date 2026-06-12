@@ -46,6 +46,17 @@ describe("createHttpLoggerOptions", () => {
     expect(id).toEqual(expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
 
+  it("rejects an oversized request id", () => {
+    const options = createHttpLoggerOptions("debug");
+
+    expect(
+      options.genReqId?.(
+        createRequest("a".repeat(129)),
+        createResponse(),
+      ),
+    ).toEqual(expect.stringMatching(/^[0-9a-f-]{36}$/));
+  });
+
   it.each([
     [200, "info"],
     [302, "info"],
@@ -74,6 +85,7 @@ describe("createHttpLoggerOptions", () => {
         { responseTime: 12, req: { body: "secret" } },
       ),
     ).toEqual({
+      event: "http.request.completed",
       requestId: "request-123",
       method: "GET",
       path: "/users/user_123",
@@ -82,5 +94,43 @@ describe("createHttpLoggerOptions", () => {
       ip: "127.0.0.1",
       userAgent: "test-agent",
     });
+  });
+
+  it("truncates an oversized user agent", () => {
+    const options = createHttpLoggerOptions("debug");
+    const request = createRequest();
+    request.id = "request-123";
+    request.headers["user-agent"] = "a".repeat(600);
+
+    const value = options.customSuccessObject?.(
+      request,
+      createResponse(),
+      { responseTime: 12 },
+    ) as { userAgent?: string };
+
+    expect(value.userAgent).toHaveLength(512);
+  });
+
+  it("sanitizes structured objects through the Pino root hook", () => {
+    const options = createHttpLoggerOptions("debug");
+    const method = jest.fn();
+    const context = {};
+
+    options.hooks?.logMethod?.call(
+      context,
+      [{ nested: { password: "secret", safe: true } }, "message"],
+      method,
+      30,
+    );
+
+    expect(method).toHaveBeenCalledWith(
+      {
+        nested: {
+          password: "[Redacted]",
+          safe: true,
+        },
+      },
+      "message",
+    );
   });
 });

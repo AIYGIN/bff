@@ -12,7 +12,11 @@ developer_instructions = """
 - process.env 直接参照が bootstrap/configuration boundary に閉じているか。
 - 横断処理が DI 可能で、module wiring が循環依存を作っていないか。
 - request body、query、authorization、cookie、token、password、個人情報がログへ出ないか。
+- framework/root logger を含む全出力経路で redaction が有効か。
+- caller が context / request ID などの予約 field を偽装できないか。
+- 循環参照、巨大値、特殊 object、危険な getter が logger を停止させないか。
 - 4xx/5xx、未処理例外、request ID、access log の失敗時動作が明確か。
+- response commit 後の例外で二重 response write を行わないか。
 - 既存 API response body と Swagger/OpenAPI 契約が維持されているか。
 - RED/GREEN の TDD 記録が PR に残っているか。
 - unit / integration / e2e test が責務とリスクに対応しているか。

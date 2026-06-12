@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Options, ReqId } from "pino-http";
+import { sanitizeLogValue } from "./log-sanitizer";
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
+const MAX_USER_AGENT_LENGTH = 512;
 
 const firstHeaderValue = (
   value: string | string[] | undefined,
@@ -10,7 +12,7 @@ const firstHeaderValue = (
 
 const pathWithoutQuery = (request: IncomingMessage): string => {
   const url = request.url ?? "/";
-  return new URL(url, "http://localhost").pathname;
+  return url.split("?", 1)[0] || "/";
 };
 
 const requestId = (request: IncomingMessage): string =>
@@ -20,14 +22,19 @@ const accessLogFields = (
   request: IncomingMessage,
   response: ServerResponse,
   duration: unknown,
+  event: "http.request.completed" | "http.request.failed",
 ) => ({
+  event,
   requestId: requestId(request),
   method: request.method,
   path: pathWithoutQuery(request),
   status: response.statusCode,
   duration,
   ip: request.socket.remoteAddress,
-  userAgent: request.headers["user-agent"],
+  userAgent: firstHeaderValue(request.headers["user-agent"])?.slice(
+    0,
+    MAX_USER_AGENT_LENGTH,
+  ),
 });
 
 export const createHttpLoggerOptions = (
@@ -39,6 +46,16 @@ export const createHttpLoggerOptions = (
   },
   serializers: {
     req: () => undefined,
+  },
+  hooks: {
+    logMethod(args, method) {
+      const sanitizedArgs = args.map((arg) =>
+        arg !== null && typeof arg === "object"
+          ? sanitizeLogValue(arg)
+          : arg,
+      );
+      method.apply(this, sanitizedArgs);
+    },
   },
   genReqId: (request, response): ReqId => {
     const incomingRequestId = firstHeaderValue(
@@ -62,9 +79,19 @@ export const createHttpLoggerOptions = (
     return "info";
   },
   customSuccessObject: (request, response, value) =>
-    accessLogFields(request, response, value.responseTime),
+    accessLogFields(
+      request,
+      response,
+      value.responseTime,
+      "http.request.completed",
+    ),
   customErrorObject: (request, response, _error, value) =>
-    accessLogFields(request, response, value.responseTime),
+    accessLogFields(
+      request,
+      response,
+      value.responseTime,
+      "http.request.failed",
+    ),
   customSuccessMessage: () => "request completed",
   customErrorMessage: () => "request failed",
   quietReqLogger: true,

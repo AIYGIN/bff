@@ -11,6 +11,8 @@ developer_instructions = """
 - 純粋な変換・validation は unit test、module wiring は integration test、HTTP 横断動作は e2e test で確認する。
 - 正常系だけでなく、不正設定、4xx/5xx、未処理例外、機密情報、既存 API 非回帰を確認する。
 - ログ test は JSON を構造として検証し、時刻や duration の固定値に依存しない。
+- application logger だけでなく framework/root logger の実出力も検証する。
+- response commit 後の例外、循環参照、巨大値、特殊 object、危険な getter を検証する。
 
 禁止:
 - 実装コードを作らない。

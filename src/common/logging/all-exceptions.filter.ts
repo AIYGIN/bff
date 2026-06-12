@@ -50,6 +50,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
+    const response = context.getResponse();
+    if (this.httpAdapterHost.httpAdapter.isHeadersSent(response)) {
+      this.httpAdapterHost.httpAdapter.end(response);
+      return;
+    }
+
     const responseBody =
       exception instanceof HttpException
         ? this.httpExceptionResponse(exception, status)
@@ -58,7 +64,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             message: "Internal server error",
           };
     this.httpAdapterHost.httpAdapter.reply(
-      context.getResponse(),
+      response,
       responseBody,
       status,
     );

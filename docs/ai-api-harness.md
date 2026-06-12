@@ -20,6 +20,7 @@ Issue 駆動で実装するためのハーネス設計を定義する。
 - `.codex/workflows/api_controller_mock_flow.md`
 - `.codex/workflows/api_implementation_flow.md`
 - `.codex/workflows/foundation_implementation_flow.md`
+- `docs/configuration-logging-foundation.md`（設定・ログ基盤を変更する場合）
 
 ## エージェント構成
 

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PinoLogger } from "nestjs-pino";
+import { sanitizeLogValue } from "./log-sanitizer";
 
 export type LogFields = Record<string, unknown>;
 export type LogMessage = string | Error;
@@ -11,52 +12,31 @@ export interface ContextLogger {
   error(message: LogMessage, fields?: LogFields): void;
 }
 
-const REDACTED = "[Redacted]";
-const SENSITIVE_KEY_PATTERN =
-  /authorization|cookie|password|passphrase|secret|token|api[-_]?key/i;
+const RESERVED_LOG_FIELDS = new Set([
+  "context",
+  "hostname",
+  "level",
+  "msg",
+  "pid",
+  "requestId",
+  "time",
+]);
 
-const serializeValue = (
-  value: unknown,
-  seen = new WeakSet<object>(),
-): unknown => {
-  if (value instanceof Error) {
-    if (seen.has(value)) {
-      return "[Circular]";
-    }
-    seen.add(value);
-
-    return {
-      name: value.name,
-      message: value.message,
-      stack: value.stack,
-      cause:
-        value.cause === undefined
-          ? undefined
-          : serializeValue(value.cause, seen),
-    };
+const sanitizedLogFields = (fields: LogFields): LogFields => {
+  const sanitized = sanitizeLogValue(fields);
+  if (
+    sanitized === null ||
+    typeof sanitized !== "object" ||
+    Array.isArray(sanitized)
+  ) {
+    return { fields: sanitized };
   }
 
-  if (Array.isArray(value)) {
-    return value.map((item) => serializeValue(item, seen));
-  }
-
-  if (value !== null && typeof value === "object") {
-    if (seen.has(value)) {
-      return "[Circular]";
-    }
-    seen.add(value);
-
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        SENSITIVE_KEY_PATTERN.test(key)
-          ? REDACTED
-          : serializeValue(item, seen),
-      ]),
-    );
-  }
-
-  return value;
+  return Object.fromEntries(
+    Object.entries(sanitized).filter(
+      ([key]) => !RESERVED_LOG_FIELDS.has(key),
+    ),
+  );
 };
 
 @Injectable()
@@ -72,11 +52,11 @@ export class AppLogger {
       const error = message instanceof Error ? message : undefined;
       const text =
         typeof message === "string" ? message : message.message;
-      const serializedFields = serializeValue(fields) as LogFields;
+      const serializedFields = sanitizedLogFields(fields);
       const bindings = {
-        context,
         ...serializedFields,
-        ...(error ? { error: serializeValue(error) } : {}),
+        context,
+        ...(error ? { error: sanitizeLogValue(error) } : {}),
       };
 
       this.pinoLogger[level](bindings, text);

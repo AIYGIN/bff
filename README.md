@@ -47,6 +47,9 @@ as JSON to stdout. Access logs include a request ID, method, query-free path,
 status, duration, IP address, and user agent. Request bodies, query values, and
 authentication headers are not included.
 
+Detailed design and operational guarantees are documented in
+[`docs/configuration-logging-foundation.md`](docs/configuration-logging-foundation.md).
+
 ## Compile and run the project
 
 ```bash

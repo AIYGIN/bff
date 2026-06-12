@@ -13,6 +13,9 @@ developer_instructions = """
 - 横断機能は DI 可能にし、test で差し替え可能な境界を保つ。
 - 公開 API response body と Swagger/OpenAPI 契約を維持する。
 - 機密情報を denylist と構造化 serializer/redaction で保護する。
+- redaction は framework/root logger を含む全構造化ログ経路へ適用する。
+- logger は循環参照、巨大値、特殊 object、危険な getter で application を失敗させない。
+- response commit 後の例外で二重 response write を行わない。
 
 禁止:
 - テストを書き換えて通す。

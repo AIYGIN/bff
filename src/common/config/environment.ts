@@ -19,7 +19,7 @@ export type LogLevel = (typeof LOG_LEVELS)[number];
 export interface EnvironmentVariables {
   NODE_ENV: AppEnvironment;
   PORT: number;
-  CORS_ORIGINS: string[];
+  CORS_ORIGINS: readonly string[];
   LOG_LEVEL: LogLevel;
   USER_API_BASE_URL: string | null;
 }
@@ -31,22 +31,49 @@ const isOneOf = <T extends string>(
   typeof value === "string" &&
   (allowedValues as readonly string[]).includes(value);
 
-const parseUrl = (key: string, value: unknown): string => {
+const parseHttpUrl = (key: string, value: unknown): URL => {
   if (typeof value !== "string" || value.trim() === "") {
     throw new Error(`${key} must be a valid URL`);
   }
 
-  const normalized = value.trim();
+  let url: URL;
   try {
-    const url = new URL(normalized);
-    if (!["http:", "https:"].includes(url.protocol)) {
-      throw new Error("unsupported protocol");
-    }
+    url = new URL(value.trim());
   } catch {
     throw new Error(`${key} must be a valid HTTP(S) URL`);
   }
 
-  return normalized;
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error(`${key} must be a valid HTTP(S) URL`);
+  }
+  if (url.username !== "" || url.password !== "") {
+    throw new Error(`${key} must not include credentials`);
+  }
+
+  return url;
+};
+
+const parseCorsOrigin = (value: string): string => {
+  const url = parseHttpUrl("CORS_ORIGIN", value);
+  if (
+    !["", "/"].includes(url.pathname) ||
+    url.search !== "" ||
+    url.hash !== ""
+  ) {
+    throw new Error("CORS_ORIGIN entries must be origins without path/query");
+  }
+
+  return url.origin;
+};
+
+const parseUserApiBaseUrl = (value: unknown): string => {
+  const url = parseHttpUrl("USER_API_BASE_URL", value);
+  if (url.search !== "" || url.hash !== "") {
+    throw new Error("USER_API_BASE_URL must not include query or fragment");
+  }
+
+  const normalizedPath = url.pathname.replace(/\/+$/, "");
+  return `${url.origin}${normalizedPath}`;
 };
 
 export const validateEnvironment = (
@@ -63,7 +90,7 @@ export const validateEnvironment = (
   const port =
     typeof rawPort === "number"
       ? rawPort
-      : typeof rawPort === "string" && rawPort.trim() !== ""
+      : typeof rawPort === "string" && /^[0-9]+$/.test(rawPort.trim())
         ? Number(rawPort)
         : Number.NaN;
   if (!Number.isInteger(port) || port < 1 || port > 65_535) {
@@ -74,14 +101,19 @@ export const validateEnvironment = (
     typeof environment.CORS_ORIGIN === "string"
       ? environment.CORS_ORIGIN
       : "http://localhost:3000";
-  const corsOrigins = rawCorsOrigin
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0)
-    .map((origin) => parseUrl("CORS_ORIGIN", origin));
+  const corsOrigins = [
+    ...new Set(
+      rawCorsOrigin
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0)
+        .map(parseCorsOrigin),
+    ),
+  ];
   if (corsOrigins.length === 0) {
     throw new Error("CORS_ORIGIN must include at least one origin");
   }
+  Object.freeze(corsOrigins);
 
   const defaultLogLevel = rawNodeEnv === "production" ? "info" : "debug";
   const rawLogLevel = environment.LOG_LEVEL ?? defaultLogLevel;
@@ -95,7 +127,7 @@ export const validateEnvironment = (
     rawUserApiBaseUrl === null ||
     rawUserApiBaseUrl === ""
       ? null
-      : parseUrl("USER_API_BASE_URL", rawUserApiBaseUrl);
+      : parseUserApiBaseUrl(rawUserApiBaseUrl);
   if (rawNodeEnv === "production" && userApiBaseUrl === null) {
     throw new Error("USER_API_BASE_URL is required in production");
   }

@@ -25,6 +25,7 @@ export const configureApp = (
   app.enableCors({
     origin: appConfig.corsOrigins,
     credentials: true,
+    exposedHeaders: ["x-request-id"],
   });
 
   const swaggerConfig = new DocumentBuilder()

@@ -73,4 +73,40 @@ describe("AppLogger", () => {
       "invalid credentials",
     );
   });
+
+  it("does not mutate fields passed by the caller", () => {
+    const info = jest.fn();
+    const logger = new AppLogger({ info } as unknown as PinoLogger);
+    const fields = {
+      nested: {
+        password: "secret",
+      },
+    };
+
+    logger.withContext("AuthService").info("auth checked", fields);
+
+    expect(fields).toEqual({
+      nested: {
+        password: "secret",
+      },
+    });
+  });
+
+  it("does not allow fields to override the logger context", () => {
+    const info = jest.fn();
+    const logger = new AppLogger({ info } as unknown as PinoLogger);
+
+    logger.withContext("TrustedContext").info("message", {
+      context: "SpoofedContext",
+      requestId: "spoofed-request-id",
+      level: 60,
+    });
+
+    expect(info).toHaveBeenCalledWith(
+      {
+        context: "TrustedContext",
+      },
+      "message",
+    );
+  });
 });

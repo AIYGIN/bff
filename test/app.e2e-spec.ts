@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   type INestApplication,
+  Logger as NestLogger,
 } from "@nestjs/common";
 import {
   ApiExcludeController,
@@ -19,9 +20,23 @@ import { LOG_STREAM } from "./../src/common/logging/logging.module";
 @ApiExcludeController()
 @Controller("_test")
 class TestErrorController {
+  private readonly logger = new NestLogger(TestErrorController.name);
+
   @Get("error")
   error(): never {
     throw new Error("test failure");
+  }
+
+  @Get("nest-log")
+  nestLog(): { ok: true } {
+    this.logger.log({
+      event: "test.nest-log",
+      nested: {
+        password: "nest-secret",
+        safe: "visible",
+      },
+    });
+    return { ok: true };
   }
 }
 
@@ -118,6 +133,19 @@ describe("Users API (e2e)", () => {
       .expect(200);
 
     expect(response.headers["x-request-id"]).toBe("request-123");
+    const correlatedLogs = logLines
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+      .filter((line) => line.requestId === "request-123");
+    expect(correlatedLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ context: "UserService" }),
+        expect.objectContaining({ context: "UserResource" }),
+        expect.objectContaining({
+          event: "http.request.completed",
+          path: "/users/user_123",
+        }),
+      ]),
+    );
   });
 
   it("replaces an unsafe request id", async () => {
@@ -158,6 +186,7 @@ describe("Users API (e2e)", () => {
       .find((line) => line.msg === "request completed");
     expect(accessLog).toMatchObject({
       level: 30,
+      event: "http.request.completed",
       method: "POST",
       path: "/todos",
       status: 201,
@@ -168,6 +197,34 @@ describe("Users API (e2e)", () => {
     expect(accessLog).not.toHaveProperty("req");
     expect(accessLog).not.toHaveProperty("query");
     expect(accessLog).not.toHaveProperty("body");
+  });
+
+  it("exposes x-request-id through CORS", async () => {
+    const response = await request(app.getHttpServer())
+      .options("/users/user_123")
+      .set("origin", "http://localhost:3000")
+      .set("access-control-request-method", "GET")
+      .expect(204);
+
+    expect(response.headers["access-control-expose-headers"]).toContain(
+      "x-request-id",
+    );
+  });
+
+  it("sanitizes structured fields emitted through the Nest logger", async () => {
+    await request(app.getHttpServer()).get("/_test/nest-log").expect(200);
+
+    const serializedLogs = logLines.join("");
+    expect(serializedLogs).not.toContain("nest-secret");
+    const nestLog = logLines
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+      .find((line) => line.event === "test.nest-log");
+    expect(nestLog).toMatchObject({
+      nested: {
+        password: "[Redacted]",
+        safe: "visible",
+      },
+    });
   });
 
   it.each([
