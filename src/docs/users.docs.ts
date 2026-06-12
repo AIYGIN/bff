@@ -7,7 +7,7 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { UserDto } from "../interface/dto/user.dto";
+import { UserDto } from "../interface/dto/user/user.dto";
 
 export const GetUserDocs = () =>
   applyDecorators(

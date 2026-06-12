@@ -1,8 +1,8 @@
 import { HttpService } from "@nestjs/axios";
 import { AxiosError } from "axios";
 import { of, throwError } from "rxjs";
-import { ResourceAccessException } from "../lib/errors/resource-access.exception";
-import { GetUserEntityRequest } from "../interface/entity/get-user.entity";
+import { ResourceAccessException } from "../../lib/errors/resource-access.exception";
+import { GetUserEntityRequest } from "../../interface/entity/user/get-user.entity";
 import { UserResource } from "./user.resource";
 
 describe("UserResource", () => {

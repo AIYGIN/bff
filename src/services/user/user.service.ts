@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import type { GetUserRequestDto } from "../interface/dto/get-user-request.dto";
-import { UserDto } from "../interface/dto/user.dto";
-import { GetUserEntityRequest } from "../interface/entity/get-user.entity";
-import { UserResource } from "../resources/user.resource";
+import type { GetUserRequestDto } from "../../interface/dto/user/get-user-request.dto";
+import { UserDto } from "../../interface/dto/user/user.dto";
+import { GetUserEntityRequest } from "../../interface/entity/user/get-user.entity";
+import { UserResource } from "../../resources/user/user.resource";
 
 @Injectable()
 export class UserService {
