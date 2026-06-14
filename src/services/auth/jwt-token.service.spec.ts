@@ -109,4 +109,32 @@ describe("JwtTokenService", () => {
       service.verifyAccessToken(token),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
+
+  it.each([
+    ["email", "private@example.com"],
+    ["providerUserId", "google-user-123"],
+    ["providerAccessToken", "google-access-token"],
+  ])("rejects a signed token containing sensitive claim %s", async (key, value) => {
+    const jwtService = new JwtService();
+    const service = new JwtTokenService(jwtService, config);
+    const token = await jwtService.signAsync(
+      {
+        displayName: "Sample User",
+        [key]: value,
+      },
+      {
+        secret: Buffer.from(jwtAccessSecret, "base64url"),
+        algorithm: "HS256",
+        issuer: "bff",
+        audience: "bff-frontend",
+        subject,
+        jwtid: "A".repeat(22),
+        expiresIn: 3600,
+      },
+    );
+
+    await expect(
+      service.verifyAccessToken(token),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
 });

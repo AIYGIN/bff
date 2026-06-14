@@ -48,6 +48,28 @@ const requiredRedirect = (
   return value;
 };
 
+const isNonBlankString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim() !== "";
+
+const isOptionalHttpUrl = (value: unknown): value is string | undefined => {
+  if (value === undefined) {
+    return true;
+  }
+  if (typeof value !== "string") {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return (
+      ["http:", "https:"].includes(url.protocol) &&
+      url.username === "" &&
+      url.password === ""
+    );
+  } catch {
+    return false;
+  }
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -77,12 +99,9 @@ export class AuthService {
   async handleGoogleCallback(
     request: HandleGoogleCallbackRequest,
   ): Promise<HandleGoogleCallbackResult> {
-    const hasState =
-      typeof request.state === "string" && request.state.length > 0;
-    const hasCode =
-      typeof request.code === "string" && request.code.length > 0;
-    const hasError =
-      typeof request.error === "string" && request.error.length > 0;
+    const hasState = isNonBlankString(request.state);
+    const hasCode = isNonBlankString(request.code);
+    const hasError = isNonBlankString(request.error);
     if (!hasState || hasCode === hasError) {
       throw new BadRequestException("Invalid OAuth callback query");
     }
@@ -112,6 +131,13 @@ export class AuthService {
           accessToken: token.accessToken,
         }),
       );
+      if (
+        !isNonBlankString(userInfo.providerUserId) ||
+        !isNonBlankString(userInfo.displayName) ||
+        !isOptionalHttpUrl(userInfo.profileImageUrl)
+      ) {
+        return { kind: "failure", redirectUrl: failureRedirectUrl };
+      }
       const currentUser: CurrentUser = {
         subject: this.opaqueSubjectService.derive(
           "google",

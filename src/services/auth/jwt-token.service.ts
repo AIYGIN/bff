@@ -8,6 +8,16 @@ import { AuthConfigurationException } from "../../lib/errors/auth-configuration.
 const CLOCK_TOLERANCE_SECONDS = 30;
 const MAX_ACCESS_TOKEN_LENGTH = 4096;
 const SUBJECT_PATTERN = /^usr_v1_[A-Za-z0-9_-]{43}$/;
+const ACCESS_TOKEN_CLAIMS = new Set([
+  "aud",
+  "displayName",
+  "exp",
+  "iat",
+  "iss",
+  "jti",
+  "profileImageUrl",
+  "sub",
+]);
 
 const requiredConfig = (
   key: string,
@@ -94,6 +104,9 @@ export class JwtTokenService {
       });
       const now = Math.floor(Date.now() / 1000);
       if (
+        Object.keys(payload).some(
+          (claim) => !ACCESS_TOKEN_CLAIMS.has(claim),
+        ) ||
         typeof payload.sub !== "string" ||
         !SUBJECT_PATTERN.test(payload.sub) ||
         typeof payload.jti !== "string" ||

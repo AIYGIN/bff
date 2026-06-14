@@ -162,7 +162,7 @@ describe("AuthController", () => {
   });
 
   it("clears the access Cookie when logging out", () => {
-    const { controller } = createController();
+    const { authService, controller } = createController();
     const response = createResponse();
 
     expect(controller.logout(response)).toBeUndefined();
@@ -170,5 +170,8 @@ describe("AuthController", () => {
       "access_token",
       cookieOptions,
     );
+    expect(authService.beginGoogleLogin).not.toHaveBeenCalled();
+    expect(authService.handleGoogleCallback).not.toHaveBeenCalled();
+    expect(authService.getMe).not.toHaveBeenCalled();
   });
 });

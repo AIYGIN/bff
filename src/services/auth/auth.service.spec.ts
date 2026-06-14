@@ -162,6 +162,84 @@ describe("AuthService", () => {
       subject: "usr_v1_opaque",
       displayName: "Sample User",
     });
+    expect(
+      googleOAuthResource.exchangeAuthorizationCode.mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(
+      googleOAuthResource.getUserInfo.mock.invocationCallOrder[0],
+    );
+    expect(
+      googleOAuthResource.getUserInfo.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      opaqueSubjectService.derive.mock.invocationCallOrder[0],
+    );
+    expect(
+      opaqueSubjectService.derive.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      jwtTokenService.signAccessToken.mock.invocationCallOrder[0],
+    );
+  });
+
+  it.each([
+    [
+      "missing Provider user ID",
+      { providerUserId: "", displayName: "Sample User" },
+    ],
+    [
+      "missing display name",
+      { providerUserId: "google-user", displayName: "" },
+    ],
+  ])("maps %s to authentication failure", async (_name, userInfo) => {
+    const {
+      googleOAuthResource,
+      jwtTokenService,
+      oauthStateService,
+      opaqueSubjectService,
+      service,
+    } = createService();
+    oauthStateService.verify.mockReturnValue({
+      state: "state",
+      codeVerifier: "verifier",
+    });
+    googleOAuthResource.exchangeAuthorizationCode.mockResolvedValue({
+      accessToken: "google-token",
+    });
+    googleOAuthResource.getUserInfo.mockResolvedValue(userInfo);
+    opaqueSubjectService.derive.mockReturnValue("usr_v1_opaque");
+    jwtTokenService.signAccessToken.mockResolvedValue("bff-jwt");
+
+    await expect(
+      service.handleGoogleCallback({
+        code: "code",
+        state: "state",
+        stateCookieValue: "signed",
+      }),
+    ).resolves.toEqual({
+      kind: "failure",
+      redirectUrl: "https://frontend.example.com/auth/failure",
+    });
+    expect(opaqueSubjectService.derive).not.toHaveBeenCalled();
+    expect(jwtTokenService.signAccessToken).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["blank code", { code: " ", state: "state" }],
+    ["blank error", { error: " ", state: "state" }],
+  ])("rejects %s before state or Provider processing", async (_name, request) => {
+    const { googleOAuthResource, oauthStateService, service } =
+      createService();
+
+    await expect(
+      service.handleGoogleCallback({
+        ...request,
+        stateCookieValue: "signed",
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(oauthStateService.verify).not.toHaveBeenCalled();
+    expect(
+      googleOAuthResource.exchangeAuthorizationCode,
+    ).not.toHaveBeenCalled();
+    expect(googleOAuthResource.getUserInfo).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -200,5 +278,20 @@ describe("AuthService", () => {
     });
     expect(response).not.toHaveProperty("subject");
     expect(response).not.toHaveProperty("email");
+  });
+
+  it("returns an optional non-null profile image without identifiers", () => {
+    const { service } = createService();
+
+    expect(
+      service.getMe({
+        subject: "usr_v1_opaque",
+        displayName: "Sample User",
+        profileImageUrl: "https://example.com/profile.jpg",
+      }),
+    ).toEqual({
+      displayName: "Sample User",
+      profileImageUrl: "https://example.com/profile.jpg",
+    });
   });
 });

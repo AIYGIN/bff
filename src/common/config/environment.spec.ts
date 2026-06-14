@@ -192,6 +192,64 @@ describe("validateEnvironment", () => {
     ).toThrow("must be different");
   });
 
+  it.each([
+    "OAUTH_STATE_SIGNING_SECRET",
+    "JWT_ACCESS_SECRET",
+    "SUBJECT_DERIVATION_SECRET",
+  ])("rejects a malformed %s", (key) => {
+    expect(() =>
+      validateEnvironment({
+        [key]: Buffer.alloc(31).toString("base64url"),
+      }),
+    ).toThrow(key);
+  });
+
+  it.each([
+    [
+      "OAUTH_STATE_SIGNING_SECRET",
+      "JWT_ACCESS_SECRET",
+    ],
+    [
+      "OAUTH_STATE_SIGNING_SECRET",
+      "SUBJECT_DERIVATION_SECRET",
+    ],
+    ["JWT_ACCESS_SECRET", "SUBJECT_DERIVATION_SECRET"],
+  ])("rejects reuse between %s and %s", (first, second) => {
+    const secret = Buffer.alloc(32, 9).toString("base64url");
+
+    expect(() =>
+      validateEnvironment({
+        [first]: secret,
+        [second]: secret,
+      }),
+    ).toThrow("must be different");
+  });
+
+  it.each([
+    [
+      "GOOGLE_OAUTH_REDIRECT_URI",
+      "https://user:password@bff.example.com/auth/google/callback",
+    ],
+    [
+      "GOOGLE_OAUTH_REDIRECT_URI",
+      "https://bff.example.com/auth/google/callback?token=secret",
+    ],
+    [
+      "GOOGLE_OAUTH_REDIRECT_URI",
+      "https://bff.example.com/auth/google/callback#fragment",
+    ],
+    [
+      "AUTH_SUCCESS_REDIRECT_URL",
+      "https://user:password@frontend.example.com/auth/success",
+    ],
+    [
+      "AUTH_FAILURE_REDIRECT_URL",
+      "ftp://frontend.example.com/auth/failure",
+    ],
+  ])("rejects unsafe Auth URL %s", (key, value) => {
+    expect(() => validateEnvironment({ [key]: value })).toThrow(key);
+  });
+
   it("does not expose a mutable CORS origin array", () => {
     const configuration = validateEnvironment({});
 

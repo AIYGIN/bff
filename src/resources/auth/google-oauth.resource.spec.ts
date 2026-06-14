@@ -28,6 +28,10 @@ describe("GoogleOAuthResource", () => {
     withContext: jest.fn().mockReturnValue(contextLogger),
   } as unknown as AppLogger;
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("builds the exact Google authorization request", () => {
     const resource = new GoogleOAuthResource(
       { get: jest.fn(), post: jest.fn() } as unknown as HttpService,
@@ -155,6 +159,38 @@ describe("GoogleOAuthResource", () => {
   });
 
   it.each([
+    ["token", "post", "exchangeAuthorizationCode"],
+    ["UserInfo", "get", "getUserInfo"],
+  ] as const)(
+    "maps a malformed null %s response to Provider rejection",
+    async (_name, httpMethod, resourceMethod) => {
+      const httpService = {
+        get: jest.fn(),
+        post: jest.fn(),
+      };
+      httpService[httpMethod].mockReturnValue(of({ data: null }));
+      const resource = new GoogleOAuthResource(
+        httpService as unknown as HttpService,
+        config,
+        appLogger,
+      );
+
+      const operation =
+        resourceMethod === "exchangeAuthorizationCode"
+          ? resource.exchangeAuthorizationCode({
+              code: "code",
+              codeVerifier: "verifier",
+            })
+          : resource.getUserInfo({ accessToken: "token" });
+
+      await expect(operation).rejects.toBeInstanceOf(
+        GoogleOAuthRejectedException,
+      );
+      expect(httpService[httpMethod]).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([
     [400, GoogleOAuthRejectedException],
     [401, GoogleOAuthRejectedException],
     [403, GoogleOAuthRejectedException],
@@ -182,5 +218,43 @@ describe("GoogleOAuthResource", () => {
       }),
     ).rejects.toBeInstanceOf(type);
     expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not put request credentials or Provider data in error logs", async () => {
+    const error = new AxiosError(
+      "raw provider response private@example.com google-access-token",
+      "ERR_BAD_RESPONSE",
+      undefined,
+      undefined,
+      {
+        status: 401,
+        data: {
+          access_token: "google-access-token",
+          email: "private@example.com",
+        },
+      } as never,
+    );
+    const post = jest.fn().mockReturnValue(throwError(() => error));
+    const resource = new GoogleOAuthResource(
+      { get: jest.fn(), post } as unknown as HttpService,
+      config,
+      appLogger,
+    );
+
+    await expect(
+      resource.exchangeAuthorizationCode({
+        code: "authorization-code",
+        codeVerifier: "pkce-verifier",
+      }),
+    ).rejects.toBeInstanceOf(GoogleOAuthRejectedException);
+
+    const serializedLogs = JSON.stringify(
+      (contextLogger.warn as jest.Mock).mock.calls,
+    );
+    expect(serializedLogs).not.toContain("authorization-code");
+    expect(serializedLogs).not.toContain("pkce-verifier");
+    expect(serializedLogs).not.toContain("google-secret");
+    expect(serializedLogs).not.toContain("google-access-token");
+    expect(serializedLogs).not.toContain("private@example.com");
   });
 });

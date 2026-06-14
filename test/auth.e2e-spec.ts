@@ -199,6 +199,33 @@ describe("Auth API (e2e)", () => {
     expect(me.body).not.toHaveProperty("profileImageUrl");
   });
 
+  it.each([undefined, ""])(
+    "redirects to failure when Google UserInfo name is %p",
+    async (displayName) => {
+      googleOAuthResource.getUserInfo.mockResolvedValue({
+        providerUserId: "google-user-123",
+        ...(displayName === undefined ? {} : { displayName }),
+        email: "private@example.com",
+      });
+      const login = await beginLogin();
+
+      const callback = await request(app.getHttpServer())
+        .get("/auth/google/callback")
+        .set("Cookie", login.stateCookie)
+        .query({ code: "authorization-code", state: login.state })
+        .expect(302);
+
+      expect(callback.headers.location).toBe(
+        "http://localhost:3000/auth/failure",
+      );
+      expect(callback.headers["set-cookie"]).not.toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("access_token="),
+        ]),
+      );
+    },
+  );
+
   it("validates state then redirects Provider errors without details", async () => {
     const login = await beginLogin();
     const response = await request(app.getHttpServer())

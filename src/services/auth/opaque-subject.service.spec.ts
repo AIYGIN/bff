@@ -1,4 +1,5 @@
 import { AppConfigService } from "../../common/config/app-config.service";
+import { AuthConfigurationException } from "../../lib/errors/auth-configuration.exception";
 import { OpaqueSubjectService } from "./opaque-subject.service";
 
 describe("OpaqueSubjectService", () => {
@@ -24,4 +25,17 @@ describe("OpaqueSubjectService", () => {
       service.derive("google", "user-b"),
     );
   });
+
+  it.each([null, "not-base64url", Buffer.alloc(31).toString("base64url")])(
+    "rejects an invalid derivation secret",
+    (subjectDerivationSecret) => {
+      const service = new OpaqueSubjectService({
+        subjectDerivationSecret,
+      } as AppConfigService);
+
+      expect(() =>
+        service.derive("google", "google-user-123"),
+      ).toThrow(AuthConfigurationException);
+    },
+  );
 });

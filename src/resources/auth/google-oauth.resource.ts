@@ -60,7 +60,11 @@ const optionalHttpUrl = (value: unknown): string | undefined => {
   }
   try {
     const url = new URL(normalized);
-    if (!["http:", "https:"].includes(url.protocol)) {
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username !== "" ||
+      url.password !== ""
+    ) {
       throw new Error("invalid protocol");
     }
     return url.toString();
@@ -145,7 +149,15 @@ export class GoogleOAuthResource {
           },
         ),
       );
-      const accessToken = nonEmptyString(response.data.access_token);
+      const data = response.data;
+      if (
+        data === null ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+      ) {
+        throw new GoogleOAuthRejectedException();
+      }
+      const accessToken = nonEmptyString(data.access_token);
       if (accessToken === null) {
         throw new GoogleOAuthRejectedException();
       }
@@ -176,12 +188,20 @@ export class GoogleOAuthResource {
           },
         ),
       );
-      const providerUserId = nonEmptyString(response.data.sub);
-      const displayName = nonEmptyString(response.data.name);
+      const data = response.data;
+      if (
+        data === null ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+      ) {
+        throw new GoogleOAuthRejectedException();
+      }
+      const providerUserId = nonEmptyString(data.sub);
+      const displayName = nonEmptyString(data.name);
       if (providerUserId === null || displayName === null) {
         throw new GoogleOAuthRejectedException();
       }
-      const profileImageUrl = optionalHttpUrl(response.data.picture);
+      const profileImageUrl = optionalHttpUrl(data.picture);
 
       return new GoogleUserInfoEntityResponse({
         providerUserId,

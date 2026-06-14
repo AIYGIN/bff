@@ -16,6 +16,7 @@ const STATE_VERSION = 1;
 const CLOCK_TOLERANCE_SECONDS = 30;
 const MAX_COOKIE_VALUE_LENGTH = 2048;
 const BASE64URL_32_BYTES = /^[A-Za-z0-9_-]{43}$/;
+const BASE64URL_VALUE = /^[A-Za-z0-9_-]+$/;
 
 interface OAuthStatePayload {
   v: number;
@@ -73,6 +74,16 @@ export class OAuthStateService {
         throw new Error("invalid OAuth state");
       }
       const [encodedPayload, encodedSignature] = parts;
+      if (
+        !BASE64URL_VALUE.test(encodedPayload) ||
+        !BASE64URL_32_BYTES.test(encodedSignature)
+      ) {
+        throw new Error("invalid OAuth state");
+      }
+      const payloadBytes = Buffer.from(encodedPayload, "base64url");
+      if (payloadBytes.toString("base64url") !== encodedPayload) {
+        throw new Error("invalid OAuth state");
+      }
       const actualSignature = Buffer.from(
         encodedSignature,
         "base64url",
@@ -88,10 +99,7 @@ export class OAuthStateService {
         throw new Error("invalid OAuth state");
       }
 
-      const rawPayload = Buffer.from(
-        encodedPayload,
-        "base64url",
-      ).toString("utf8");
+      const rawPayload = payloadBytes.toString("utf8");
       if (rawPayload.length > 1024) {
         throw new Error("invalid OAuth state");
       }
