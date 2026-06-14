@@ -1,41 +1,16 @@
 import { NestFactory } from "@nestjs/core";
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { ValidationPipe } from "@nestjs/common";
+import { Logger } from "nestjs-pino";
 import { AppModule } from "./app.module";
+import { configureApp } from "./bootstrap";
+import { AppConfigService } from "./common/config/app-config.service";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
+  configureApp(app);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  app.enableCors({
-    origin: 'http://localhost:3000',
-    credentials: true,
-  });
-
-  const config = new DocumentBuilder()
-    .setTitle("BFF API")
-    .setDescription("Frontend 向け BFF API")
-    .setVersion("1.0")
-    .addBearerAuth()
-    .build();
-
-  const documentFactory = () =>
-    SwaggerModule.createDocument(app, config, {
-      autoTagControllers: false,
-    });
-
-  SwaggerModule.setup("docs", app, documentFactory, {
-    jsonDocumentUrl: "docs-json",
-  });
-
-  await app.listen(process.env.PORT ?? 3001);
+  const config = app.get(AppConfigService);
+  await app.listen(config.port);
 }
 
 void bootstrap();

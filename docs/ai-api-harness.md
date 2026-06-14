@@ -1,6 +1,7 @@
 # AI API Harness
 
-このドキュメントは、NestJS BFF で AI エージェントが API を追加するためのハーネス設計を定義する。
+このドキュメントは、NestJS BFF で AI エージェントが API と共通基盤を
+Issue 駆動で実装するためのハーネス設計を定義する。
 
 ## 目的
 
@@ -18,6 +19,8 @@
 - `docs/swagger-openapi-rules.md`
 - `.codex/workflows/api_controller_mock_flow.md`
 - `.codex/workflows/api_implementation_flow.md`
+- `.codex/workflows/foundation_implementation_flow.md`
+- `docs/configuration-logging-foundation.md`（設定・ログ基盤を変更する場合）
 
 ## エージェント構成
 
@@ -31,6 +34,20 @@
 - `implementation_implementer`: failing test を通す本実装を行う。
 - `implementation_reviewer`: 本実装 PR が BFF / Swagger / TDD ルールに適合しているか確認する。
 - `mock_reviewer`: Controller mock PR を中心に BFF / Swagger / TDD ルールに適合しているか確認する。
+- `foundation_issue_responder`: 基盤 Issue とコメントを読み、TDD 実装 PR 作成までを進行する。
+- `foundation_tester`: 基盤要求を unit / integration / e2e test として具体化する。
+- `foundation_implementer`: failing test を通す共通基盤実装を行う。
+- `foundation_reviewer`: 非回帰、security、DI、運用性、TDD ルールを確認する。
+
+## Issue 種別の振り分け
+
+- API endpoint / DTO / Swagger 契約の追加: Mock Issue 駆動フロー
+- 合意済み API 契約の Service / Resource 本実装: 本実装 Issue 駆動フロー
+- 設定、logging、error handling、HTTP client、認証共通部、observability、
+  build、test、CI: 基盤 Issue 駆動フロー
+
+複数種別にまたがる場合は、公開 API 契約の変更を API Issue として分離する。
+API response body や Swagger 契約を変更しない横断的な変更は基盤 Issue とする。
 
 ## Mock Issue 駆動フロー
 
@@ -48,6 +65,21 @@
 4. `implementation_issue_responder` が Issue 本文と最新コメントを読み、実装可能性を確認する。
 5. 実装計画が不十分な場合は質問コメント案を出して停止する。
 6. 実装計画が十分な場合は本実装 PR を TDD で作る。
+
+## 基盤 Issue 駆動フロー
+
+1. 人間が基盤 Issue に目的、変更範囲、public interface、test plan を書く。
+2. 人間が Issue コメントで仕様を補足・修正する。
+3. `foundation_issue_responder` が Issue、コメント、関連コードを読み、
+   実装可能性とリスクを確認する。
+4. 不明点が security、公開契約、データ損失に関わる場合は質問コメント案を
+   出して停止する。
+5. 十分な要求がある場合は `foundation_tester`、
+   `foundation_implementer`、`foundation_reviewer` の順で TDD 実装する。
+
+基盤 Issue の完了条件は、設定・DI・横断動作・機密情報保護・既存 API 非回帰が
+test で表現されていることとする。Swagger/OpenAPI の変更は必須ではなく、
+むしろ Issue にない契約変更がないことを確認する。
 
 ## API IF Issue に必要な項目
 
@@ -138,6 +170,20 @@ Controller mock PR は、最低限以下を満たすこと。
 - `pnpm lint` が通る。
 - `pnpm typecheck` が通る。
 - `pnpm test --runInBand` が通る。
+- `pnpm build` が通る。
+
+基盤実装 PR は、最低限以下を満たすこと。
+
+- 設定の default、型変換、不正値、本番必須値が unit test で確認されている。
+- module/provider の DI と横断処理が必要な integration test で確認されている。
+- HTTP 横断動作と既存 API 非回帰が e2e test で確認されている。
+- request body、query、authorization、cookie、token、password、個人情報が
+  ログへ出ない。
+- 既存 API response body と Swagger/OpenAPI 契約を意図せず変更していない。
+- `pnpm lint` が通る。
+- `pnpm typecheck` が通る。
+- `pnpm test --runInBand` が通る。
+- `pnpm test:e2e --runInBand` が通る。
 - `pnpm build` が通る。
 
 ## PR 作成時の注意

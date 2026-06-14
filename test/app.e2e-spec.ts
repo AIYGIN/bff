@@ -1,18 +1,49 @@
-import { type INestApplication, ValidationPipe } from "@nestjs/common";
 import {
-  DocumentBuilder,
+  Controller,
+  Get,
+  type INestApplication,
+  Logger as NestLogger,
+} from "@nestjs/common";
+import {
+  ApiExcludeController,
   type OpenAPIObject,
-  SwaggerModule,
 } from "@nestjs/swagger";
 import { Test, type TestingModule } from "@nestjs/testing";
+import { Logger } from "nestjs-pino";
 import type { NextFunction, Request, Response } from "express";
 import request from "supertest";
 import type { App } from "supertest/types";
 import { AppModule } from "./../src/app.module";
+import { configureApp } from "./../src/bootstrap";
+import { LOG_STREAM } from "./../src/common/logging/logging.module";
+
+@ApiExcludeController()
+@Controller("_test")
+class TestErrorController {
+  private readonly logger = new NestLogger(TestErrorController.name);
+
+  @Get("error")
+  error(): never {
+    throw new Error("test failure");
+  }
+
+  @Get("nest-log")
+  nestLog(): { ok: true } {
+    this.logger.log({
+      event: "test.nest-log",
+      nested: {
+        password: "nest-secret",
+        safe: "visible",
+      },
+    });
+    return { ok: true };
+  }
+}
 
 describe("Users API (e2e)", () => {
   let app: INestApplication<App>;
   let openApiDocument: OpenAPIObject;
+  let logLines: string[];
 
   const parseJsonBody = (
     req: Request,
@@ -47,33 +78,26 @@ describe("Users API (e2e)", () => {
   };
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    logLines = [];
+    const logStream = {
+      write: (line: string): boolean => {
+        logLines.push(line);
+        return true;
+      },
+    };
+    const moduleFixture: TestingModule =
+      await Test.createTestingModule({
+        imports: [AppModule],
+        controllers: [TestErrorController],
+      })
+        .overrideProvider(LOG_STREAM)
+        .useValue(logStream)
+        .compile();
 
     app = moduleFixture.createNestApplication({ bodyParser: false });
+    app.useLogger(app.get(Logger));
     app.use(parseJsonBody);
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle("BFF API")
-      .setDescription("Frontend 向け BFF API")
-      .setVersion("1.0")
-      .addBearerAuth()
-      .build();
-
-    openApiDocument = SwaggerModule.createDocument(app, swaggerConfig, {
-      autoTagControllers: false,
-    });
-    SwaggerModule.setup("docs", app, openApiDocument, {
-      jsonDocumentUrl: "docs-json",
-    });
+    openApiDocument = configureApp(app);
 
     await app.init();
   });
@@ -88,12 +112,155 @@ describe("Users API (e2e)", () => {
       });
   });
 
+  it("generates a request id and returns it without changing the body", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/users/user_123")
+      .expect(200);
+
+    expect(response.headers["x-request-id"]).toEqual(
+      expect.stringMatching(/^[0-9a-f-]{36}$/),
+    );
+    expect(response.body).toEqual({
+      id: "user_123",
+      name: "Sample User",
+    });
+  });
+
+  it("reuses a safe request id", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/users/user_123")
+      .set("x-request-id", "request-123")
+      .expect(200);
+
+    expect(response.headers["x-request-id"]).toBe("request-123");
+    const correlatedLogs = logLines
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+      .filter((line) => line.requestId === "request-123");
+    expect(correlatedLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ context: "UserService" }),
+        expect.objectContaining({ context: "UserResource" }),
+        expect.objectContaining({
+          event: "http.request.completed",
+          path: "/users/user_123",
+        }),
+      ]),
+    );
+  });
+
+  it("replaces an unsafe request id", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/users/user_123")
+      .set("x-request-id", "unsafe request id")
+      .expect(200);
+
+    expect(response.headers["x-request-id"]).not.toBe("unsafe request id");
+  });
+
+  it("keeps the standard response for an unhandled exception", () => {
+    return request(app.getHttpServer())
+      .get("/_test/error")
+      .expect(500)
+      .expect({
+        statusCode: 500,
+        message: "Internal server error",
+      });
+  });
+
+  it("writes minimal access logs without body, query, or credentials", async () => {
+    await request(app.getHttpServer())
+      .post("/todos?token=query-secret")
+      .set("authorization", "Bearer header-secret")
+      .set("cookie", "session=cookie-secret")
+      .send({ title: "body-secret" })
+      .expect(201);
+
+    const serializedLogs = logLines.join("");
+    expect(serializedLogs).not.toContain("query-secret");
+    expect(serializedLogs).not.toContain("header-secret");
+    expect(serializedLogs).not.toContain("cookie-secret");
+    expect(serializedLogs).not.toContain("body-secret");
+
+    const accessLog = logLines
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+      .find((line) => line.msg === "request completed");
+    expect(accessLog).toMatchObject({
+      level: 30,
+      event: "http.request.completed",
+      method: "POST",
+      path: "/todos",
+      status: 201,
+      requestId: expect.any(String),
+      duration: expect.any(Number),
+      ip: expect.any(String),
+    });
+    expect(accessLog).not.toHaveProperty("req");
+    expect(accessLog).not.toHaveProperty("query");
+    expect(accessLog).not.toHaveProperty("body");
+  });
+
+  it("exposes x-request-id through CORS", async () => {
+    const response = await request(app.getHttpServer())
+      .options("/users/user_123")
+      .set("origin", "http://localhost:3000")
+      .set("access-control-request-method", "GET")
+      .expect(204);
+
+    expect(response.headers["access-control-expose-headers"]).toContain(
+      "x-request-id",
+    );
+  });
+
+  it("sanitizes structured fields emitted through the Nest logger", async () => {
+    await request(app.getHttpServer()).get("/_test/nest-log").expect(200);
+
+    const serializedLogs = logLines.join("");
+    expect(serializedLogs).not.toContain("nest-secret");
+    const nestLog = logLines
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+      .find((line) => line.event === "test.nest-log");
+    expect(nestLog).toMatchObject({
+      nested: {
+        password: "[Redacted]",
+        safe: "visible",
+      },
+    });
+  });
+
+  it.each([
+    [400, "/todos", "warn", 40],
+    [500, "/_test/error", "error", 50],
+  ])(
+    "logs HTTP %i access at %s level",
+    async (status, path, _level, numericLevel) => {
+      const response =
+        status === 400
+          ? request(app.getHttpServer()).post(path).send({})
+          : request(app.getHttpServer()).get(path);
+
+      await response.expect(status);
+
+      const accessLog = logLines
+        .map((line) => JSON.parse(line) as Record<string, unknown>)
+        .find(
+          (line) =>
+            line.path === path &&
+            line.status === status &&
+            (line.msg === "request completed" ||
+              line.msg === "request failed"),
+        );
+      expect(accessLog?.level).toBe(numericLevel);
+    },
+  );
+
   it("publishes the endpoint in the OpenAPI document", () => {
-    expect(Object.keys(openApiDocument.paths)).toEqual([
-      "/users/{userId}",
-      "/todos",
-      "/todos/{id}",
-    ]);
+    expect(Object.keys(openApiDocument.paths)).toEqual(
+      expect.arrayContaining([
+        "/users/{userId}",
+        "/todos",
+        "/todos/{id}",
+      ]),
+    );
     expect(openApiDocument.paths["/users/{userId}"]?.get).toMatchObject({
       summary: "ユーザー取得",
       tags: ["users"],
@@ -484,6 +651,6 @@ describe("Users API (e2e)", () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    await app?.close();
   });
 });

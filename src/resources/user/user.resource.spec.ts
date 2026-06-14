@@ -1,16 +1,30 @@
 import { HttpService } from "@nestjs/axios";
 import { AxiosError } from "axios";
 import { of, throwError } from "rxjs";
+import {
+  AppLogger,
+  type ContextLogger,
+} from "../../common/logging/app-logger.service";
 import { ResourceAccessException } from "../../lib/errors/resource-access.exception";
 import { GetUserEntityRequest } from "../../interface/entity/user/get-user.entity";
 import { UserResource } from "./user.resource";
 
 describe("UserResource", () => {
+  const contextLogger: ContextLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  const appLogger = {
+    withContext: jest.fn().mockReturnValue(contextLogger),
+  } as unknown as AppLogger;
+
   it("returns a dummy user entity before external API integration", async () => {
     const httpService = {
       get: jest.fn(),
     } as unknown as HttpService;
-    const resource = new UserResource(httpService);
+    const resource = new UserResource(httpService, appLogger, null);
 
     await expect(
       resource.getUser(new GetUserEntityRequest({ userId: "user_123" })),
@@ -33,7 +47,11 @@ describe("UserResource", () => {
     const httpService = {
       get,
     } as unknown as HttpService;
-    const resource = new UserResource(httpService, "https://users.example.com");
+    const resource = new UserResource(
+      httpService,
+      appLogger,
+      "https://users.example.com",
+    );
 
     await expect(
       resource.getUser(new GetUserEntityRequest({ userId: "user/123" })),
@@ -57,7 +75,11 @@ describe("UserResource", () => {
     const httpService = {
       get,
     } as unknown as HttpService;
-    const resource = new UserResource(httpService, "https://users.example.com");
+    const resource = new UserResource(
+      httpService,
+      appLogger,
+      "https://users.example.com",
+    );
 
     await expect(
       resource.getUser(new GetUserEntityRequest({ userId: "user_123" })),

@@ -23,38 +23,57 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Frontend 向け NestJS BFF。
 
 ## Project setup
 
 ```bash
-$ pnpm install
+pnpm install
+cp .env.example .env
 ```
+
+## Environment
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NODE_ENV` | `development` | `development`, `test`, or `production` |
+| `PORT` | `3001` | HTTP listen port (`1` to `65535`) |
+| `CORS_ORIGIN` | `http://localhost:3000` | Comma-separated HTTP(S) origins |
+| `LOG_LEVEL` | `debug` in development/test, `info` in production | Pino log level |
+| `USER_API_BASE_URL` | unset | User API URL; required in production |
+
+Environment values are validated during application startup. Logs are emitted
+as JSON to stdout. Access logs include a request ID, method, query-free path,
+status, duration, IP address, and user agent. Request bodies, query values, and
+authentication headers are not included.
+
+Detailed design and operational guarantees are documented in
+[`docs/configuration-logging-foundation.md`](docs/configuration-logging-foundation.md).
 
 ## Compile and run the project
 
 ```bash
 # development
-$ pnpm run start
+pnpm run start
 
 # watch mode
-$ pnpm run start:dev
+pnpm run start:dev
 
 # production mode
-$ pnpm run start:prod
+NODE_ENV=production USER_API_BASE_URL=https://users.example.com pnpm run start:prod
 ```
 
 ## Run tests
 
 ```bash
 # unit tests
-$ pnpm run test
+pnpm run test
 
 # e2e tests
-$ pnpm run test:e2e
+pnpm run test:e2e
 
 # test coverage
-$ pnpm run test:cov
+pnpm run test:cov
 ```
 
 ## Deployment
