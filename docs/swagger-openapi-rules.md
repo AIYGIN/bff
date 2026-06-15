@@ -10,20 +10,15 @@ Swagger / OpenAPI は BFF API の公開契約を表す。
 
 ## 基本方針
 
+レイヤー境界は `docs/layer-boundaries.md` を正本とし、この文書では
+Swagger/OpenAPI 固有ルールだけを定義する。
+
 * Swagger / OpenAPI の operation 定義は `src/docs` に置く
 * Controller には `src/docs` の decorator だけを付与する
 * DTO property schema は DTO class に書く
 * Entity は OpenAPI に公開しない
 * Service / Resource は Swagger を知らない状態にする
 * Swagger のためだけの example / schema / decorator は `src/docs` に集約する
-* Controller と Service は 1対1 とし、Controller は対応する Service だけを inject する
-* Controller は複数 Service / helper service / Resource / Entity / HttpService を扱わない
-* Resource は Entity を返し、DTO を返さない
-* Service は Entity -> DTO 変換を担当する
-* Entity は Swagger/OpenAPI に公開しない
-* DI 不要な helper は `src/utility` に置き、Utility に NestJS DI 依存を入れない
-* `src/provider/` と `src/module/` は作らない
-* `*.module.ts` は責務を持つレイヤーの近くに置く
 
 ## ディレクトリ構成
 

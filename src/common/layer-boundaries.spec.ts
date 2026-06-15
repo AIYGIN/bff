@@ -3,7 +3,7 @@ import {
   readdirSync,
   statSync,
 } from "node:fs";
-import { basename, extname, resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "../app.module";
 import { configureApp } from "../bootstrap";
@@ -125,34 +125,41 @@ describe("layer boundaries", () => {
     }
   });
 
-  it("documents the enforced layer boundaries for Codex agents", () => {
+  it("defines the canonical layer boundary rules", () => {
+    const contents = source("docs/layer-boundaries.md");
+    const requiredRules = [
+      /Controller.*Service.*1対1/s,
+      /対応する Service だけを inject/s,
+      /Controller -> Service -> Resource -> External API/,
+      /src\/provider\//,
+      /src\/module\//,
+      /Resource.*Entity を返/s,
+      /Service.*Entity -> DTO/s,
+      /Entity.*Swagger\/OpenAPI.*公開しない/s,
+      /Utility.*NestJS DI 依存を入れない/s,
+    ];
+
+    for (const rule of requiredRules) {
+      expect(contents).toMatch(rule);
+    }
+  });
+
+  it("makes the canonical rules required reading for Codex agents", () => {
     const paths = [
       "AGENTS.md",
       "docs/bff-code-design-rules.md",
       "docs/swagger-openapi-rules.md",
       "docs/ai-api-harness.md",
-      ".codex/agents/implementation_implementer.toml",
-      ".codex/agents/implementation_reviewer.toml",
-      ".codex/agents/implementation_tester.toml",
-      ".codex/workflows/api_implementation_flow.md",
-    ];
-    const requiredRules = [
-      /Controller.*Service.*1対1/s,
-      /対応する Service だけを inject/s,
-      /src\/provider\//,
-      /src\/module\//,
-      /Resource.*Entity を返/s,
-      /Service.*Entity.*DTO/s,
-      /Entity.*Swagger\/OpenAPI.*公開しない/s,
-      /DI 不要.*utility/is,
+      ...filesBelow(".codex/agents").filter((path) =>
+        path.endsWith(".toml"),
+      ),
+      ...filesBelow(".codex/workflows").filter((path) =>
+        path.endsWith(".md"),
+      ),
     ];
 
     for (const path of paths) {
-      expect(extname(path)).not.toBe("");
-      const contents = source(path);
-      for (const rule of requiredRules) {
-        expect(contents).toMatch(rule);
-      }
+      expect(source(path)).toContain("docs/layer-boundaries.md");
     }
   });
 });

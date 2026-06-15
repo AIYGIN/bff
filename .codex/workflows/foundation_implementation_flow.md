@@ -7,18 +7,11 @@ Driven Development で進める。
 API endpoint と Swagger/OpenAPI 公開契約の追加が主目的の場合は、
 API Controller Mock Flow または API Implementation Flow を使う。
 
-## 基本原則
+## 必須参照
 
-- Controller と Service は 1対1 にする。
-- Controller は対応する Service だけを inject する。
-- Controller は複数 Service / helper service / Resource / Entity / HttpService を扱わない。
-- Resource は Entity を返し、DTO を返さない。
-- Service は Entity -> DTO 変換を担当する。
-- Entity は Swagger/OpenAPI に公開しない。
-- DI 不要な helper は utility に置き、Utility に NestJS DI 依存を入れない。
-- Auth の jwt-token / oauth-state / opaque-subject / cookie helper は utility に置く。
-- `src/provider/` と `src/module/` は作らない。
-- `*.module.ts` は責務を持つレイヤーの近くに置く。
+- レイヤー境界の正本 `docs/layer-boundaries.md` を実装・テスト・レビュー前に読む。
+
+## 基本原則
 
 - 人間が基盤 Issue の目的、変更範囲、public interface、test plan、
   acceptance criteria を定義する。

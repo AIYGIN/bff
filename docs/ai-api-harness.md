@@ -16,6 +16,7 @@ Issue 駆動で実装するためのハーネス設計を定義する。
 
 - `AGENTS.md`
 - `docs/bff-code-design-rules.md`
+- `docs/layer-boundaries.md`
 - `docs/swagger-openapi-rules.md`
 - `.codex/workflows/api_controller_mock_flow.md`
 - `.codex/workflows/api_implementation_flow.md`
@@ -123,42 +124,8 @@ Controller mock PR は、Frontend と API 契約を先に合意するための P
 
 ## レイヤー責務
 
-Controller:
-
-- Controller mock PR では routing と対応 Service の呼び出しだけを行う。
-- `src/docs` の decorator を付与する。
-- Controller と Service は 1対1 にする。
-- 本実装では Controller は対応する Service だけを inject する。
-- 複数 Service / helper service / Resource / Entity / HttpService を扱わない。
-- Controller mock では対応 Service 以外の Service / Resource / Entity / HTTP client を import しない。
-
-Service:
-
-- Controller mock PR では Controller と 1対1 の対応 Service を作成し、固定 DTO を返す。
-- 本実装 PR で Controller に返す DTO を確定する。
-- Resource が返した Entity -> DTO 変換を担当する。
-- HTTP client を知らない。
-
-Resource:
-
-- 外部 API 接続 PR で追加する。
-- Resource は Entity を返し、DTO を返さない。
-- 外部 API error を BFF 内部例外に変換する。
-- 本実装 PR では外部 API request / response を Resource に閉じ込める。
-
-Utility / Module:
-
-- DI 不要な helper は `src/utility/` に置き、Utility に NestJS DI 依存を入れない。
-- Auth の jwt-token / oauth-state / opaque-subject / cookie helper は utility に置く。
-- `src/provider/` と `src/module/` は作らない。
-- `*.module.ts` は責務を持つレイヤーの近くに置く。
-- Entity は Swagger/OpenAPI に公開しない。
-
-Docs:
-
-- Swagger/OpenAPI operation decorator を置く。
-- DTO は import してよい。
-- Service / Resource / Entity は import しない。
+Controller / Service / Resource / Guard / Utility / DTO / Entity / Module の
+責務と禁止事項は `docs/layer-boundaries.md` を正本とする。
 
 ## TDD 完了条件
 
