@@ -7,6 +7,10 @@ Driven Development で進める。
 API endpoint と Swagger/OpenAPI 公開契約の追加が主目的の場合は、
 API Controller Mock Flow または API Implementation Flow を使う。
 
+## 必須参照
+
+- レイヤー境界の正本 `docs/layer-boundaries.md` を実装・テスト・レビュー前に読む。
+
 ## 基本原則
 
 - 人間が基盤 Issue の目的、変更範囲、public interface、test plan、

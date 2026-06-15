@@ -25,5 +25,11 @@ Issue Driven + Test Driven Development を前提とする。
 NestJS BFF の実装では、以下のルールドキュメントを必ず確認する。
 
 - `docs/bff-code-design-rules.md`
+- `docs/layer-boundaries.md`
 - `docs/swagger-openapi-rules.md`
 - `docs/ai-api-harness.md`
+
+## レイヤー境界
+
+レイヤー境界の正本は `docs/layer-boundaries.md` とする。個別文書へ同じルールを
+複製しない。

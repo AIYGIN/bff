@@ -4,6 +4,10 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 
 このフローでは、Controller mock で固定 DTO を返していた endpoint を、Service / Resource / Entity / 外部 API 接続を含む本実装へ置き換える。API 契約の変更が必要な場合は、Issue コメントで理由と差分を明確にする。
 
+## 必須参照
+
+- レイヤー境界の正本 `docs/layer-boundaries.md` を実装・テスト・レビュー前に読む。
+
 ## 基本原則
 
 - Controller mock PR で API 契約が合意済みであることを前提にする。
@@ -47,10 +51,10 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 含める:
 
 - `src/controller/*.controller.ts`
-- `src/services/*.service.ts`
-- `src/resources/*.resource.ts`
-- `src/interface/dto/*.dto.ts`
-- `src/interface/entity/*.entity.ts`
+- `src/service/*.service.ts`
+- `src/resource/*.resource.ts`
+- `src/dto/*.dto.ts`
+- `src/entity/*.entity.ts`
 - module wiring
 - Controller test
 - Service unit test
