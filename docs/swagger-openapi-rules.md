@@ -10,6 +10,9 @@ Swagger / OpenAPI は BFF API の公開契約を表す。
 
 ## 基本方針
 
+レイヤー境界は `docs/layer-boundaries.md` を正本とし、この文書では
+Swagger/OpenAPI 固有ルールだけを定義する。
+
 * Swagger / OpenAPI の operation 定義は `src/docs` に置く
 * Controller には `src/docs` の decorator だけを付与する
 * DTO property schema は DTO class に書く
@@ -109,7 +112,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserDto } from '@/interface/dto/user.dto';
+import { UserDto } from '@/dto/user.dto';
 
 export const GetUserDocs = () =>
   applyDecorators(

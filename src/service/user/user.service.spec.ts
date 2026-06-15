@@ -1,9 +1,9 @@
-import { GetUserEntityResponse } from "../../interface/entity/user/get-user.entity";
+import { GetUserEntityResponse } from "../../entity/get-user.entity";
 import {
   AppLogger,
   type ContextLogger,
 } from "../../common/logging/app-logger.service";
-import { UserResource } from "../../resources/user/user.resource";
+import { UserResource } from "../../resource/user/user.resource";
 import { UserService } from "./user.service";
 
 describe("UserService", () => {

@@ -6,11 +6,11 @@ import {
   AppLogger,
   type ContextLogger,
 } from "../../common/logging/app-logger.service";
-import { ResourceAccessException } from "../../lib/errors/resource-access.exception";
+import { ResourceAccessException } from "../../common/error/resource-access.exception";
 import {
   type GetUserEntityRequest,
   GetUserEntityResponse,
-} from "../../interface/entity/user/get-user.entity";
+} from "../../entity/get-user.entity";
 import { USER_API_BASE_URL } from "./user-resource.constants";
 
 interface ExternalUserResponse {

@@ -1,90 +1,100 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Post,
   Query,
+  Req,
   Res,
+  UseGuards,
 } from "@nestjs/common";
-import type { CookieOptions, Response } from "express";
+import type { Request, Response } from "express";
+import { CurrentUser as CurrentUserDecorator } from "../../guard/current-user.decorator";
+import type { CurrentUser } from "../../guard/current-user";
+import { JwtAuthGuard } from "../../guard/jwt-auth.guard";
 import {
   GetAuthMeDocs,
   GoogleCallbackDocs,
   GoogleLoginDocs,
   LogoutDocs,
 } from "../../docs/auth.docs";
-import { AuthMeResponseDto } from "../../interface/dto/auth/auth-me-response.dto";
-import { GoogleCallbackQueryDto } from "../../interface/dto/auth/google-callback-query.dto";
-
-const GOOGLE_AUTHORIZATION_URL =
-  "https://accounts.google.com/o/oauth2/v2/auth?client_id=mock-google-client-id&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fauth%2Fgoogle%2Fcallback&response_type=code&scope=openid%20profile%20email&state=mock-oauth-state&code_challenge=mock-code-challenge&code_challenge_method=S256";
-const AUTH_SUCCESS_URL = "http://localhost:3000/auth/success";
-const AUTH_FAILURE_URL = "http://localhost:3000/auth/failure";
-
-const cookieOptions = (): CookieOptions => ({
-  httpOnly: true,
-  sameSite: "lax",
-  path: "/",
-  secure: process.env.NODE_ENV === "production",
-});
+import { AuthMeResponseDto } from "../../dto/auth/auth-me-response.dto";
+import { GoogleCallbackQueryDto } from "../../dto/auth/google-callback-query.dto";
+import {
+  AuthService,
+  type HandleGoogleCallbackResult,
+} from "../../service/auth/auth.service";
 
 @Controller("auth")
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
   @Get("google/login")
   @GoogleLoginDocs()
-  googleLogin(@Res() response: Response): void {
+  async googleLogin(@Res() response: Response): Promise<void> {
+    const result = await this.authService.beginGoogleLogin();
     response.cookie(
       "google_oauth_state",
-      "mock-signed-oauth-state-pkce",
-      cookieOptions(),
+      result.stateCookieValue,
+      this.authService.oauthStateCookieOptions(),
     );
-    response.redirect(GOOGLE_AUTHORIZATION_URL);
+    response.redirect(result.authorizationUrl);
   }
 
   @Get("google/callback")
   @GoogleCallbackDocs()
-  googleCallback(
+  async googleCallback(
     @Query() query: GoogleCallbackQueryDto,
+    @Req() request: Request,
     @Res() response: Response,
-  ): void {
-    const hasState =
-      typeof query.state === "string" && query.state.length > 0;
-    const hasCode =
-      typeof query.code === "string" && query.code.length > 0;
-    const hasError =
-      typeof query.error === "string" && query.error.length > 0;
-
-    if (!hasState || hasCode === hasError) {
-      throw new BadRequestException("Invalid OAuth callback query");
+  ): Promise<void> {
+    let result: HandleGoogleCallbackResult;
+    try {
+      result = await this.authService.handleGoogleCallback({
+        code: query.code,
+        cookieHeader: request.headers.cookie,
+        state: query.state,
+        error: query.error,
+      });
+    } catch (error) {
+      response.clearCookie(
+        "google_oauth_state",
+        this.authService.cookieClearOptions(),
+      );
+      throw error;
     }
 
-    if (hasCode) {
+    response.clearCookie(
+      "google_oauth_state",
+      this.authService.cookieClearOptions(),
+    );
+    if (result.kind === "success") {
       response.cookie(
         "access_token",
-        "mock-bff-access-token",
-        cookieOptions(),
+        result.accessToken,
+        this.authService.accessTokenCookieOptions(),
       );
     }
-
-    response.clearCookie("google_oauth_state", cookieOptions());
-    response.redirect(hasCode ? AUTH_SUCCESS_URL : AUTH_FAILURE_URL);
+    response.redirect(result.redirectUrl);
   }
 
   @Get("me")
+  @UseGuards(JwtAuthGuard)
   @GetAuthMeDocs()
-  getMe(): AuthMeResponseDto {
-    return new AuthMeResponseDto({
-      displayName: "Sample User",
-      profileImageUrl: "https://example.com/profile.jpg",
-    });
+  getMe(
+    @CurrentUserDecorator() currentUser: CurrentUser,
+  ): AuthMeResponseDto {
+    return this.authService.getMe(currentUser);
   }
 
   @Post("logout")
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogoutDocs()
   logout(@Res({ passthrough: true }) response: Response): void {
-    response.clearCookie("access_token", cookieOptions());
+    response.clearCookie(
+      "access_token",
+      this.authService.cookieClearOptions(),
+    );
   }
 }

@@ -4,6 +4,9 @@ model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 
 developer_instructions = """
+必須参照:
+- レイヤー境界の正本 `docs/layer-boundaries.md` を実装・テスト・レビュー前に読む。
+
 あなたは NestJS BFF の基盤実装者です。
 
 役割:
