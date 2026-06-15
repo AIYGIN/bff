@@ -6,8 +6,8 @@ import type { App } from "supertest/types";
 import { AppModule } from "../src/app.module";
 import { configureApp } from "../src/bootstrap";
 import { AppConfigService } from "../src/common/config/app-config.service";
-import { GoogleOAuthRejectedException } from "../src/resources/auth/google-oauth-rejected.exception";
-import { GoogleOAuthResource } from "../src/resources/auth/google-oauth.resource";
+import { GoogleOAuthRejectedException } from "../src/resource/auth/google-oauth-rejected.exception";
+import { GoogleOAuthResource } from "../src/resource/auth/google-oauth.resource";
 
 describe("Auth API (e2e)", () => {
   let app: INestApplication<App>;

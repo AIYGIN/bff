@@ -10,30 +10,25 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { CurrentUser as CurrentUserDecorator } from "../../common/auth/current-user.decorator";
-import type { CurrentUser } from "../../common/auth/current-user";
-import { readCookie } from "../../common/auth/cookie";
-import { JwtAuthGuard } from "../../common/auth/jwt-auth.guard";
+import { CurrentUser as CurrentUserDecorator } from "../../guard/current-user.decorator";
+import type { CurrentUser } from "../../guard/current-user";
+import { JwtAuthGuard } from "../../guard/jwt-auth.guard";
 import {
   GetAuthMeDocs,
   GoogleCallbackDocs,
   GoogleLoginDocs,
   LogoutDocs,
 } from "../../docs/auth.docs";
-import { AuthMeResponseDto } from "../../interface/dto/auth/auth-me-response.dto";
-import { GoogleCallbackQueryDto } from "../../interface/dto/auth/google-callback-query.dto";
-import { AuthCookieService } from "../../services/auth/auth-cookie.service";
+import { AuthMeResponseDto } from "../../dto/auth/auth-me-response.dto";
+import { GoogleCallbackQueryDto } from "../../dto/auth/google-callback-query.dto";
 import {
   AuthService,
   type HandleGoogleCallbackResult,
-} from "../../services/auth/auth.service";
+} from "../../service/auth/auth.service";
 
 @Controller("auth")
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly authCookieService: AuthCookieService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Get("google/login")
   @GoogleLoginDocs()
@@ -42,7 +37,7 @@ export class AuthController {
     response.cookie(
       "google_oauth_state",
       result.stateCookieValue,
-      this.authCookieService.oauthStateOptions(),
+      this.authService.oauthStateCookieOptions(),
     );
     response.redirect(result.authorizationUrl);
   }
@@ -58,30 +53,27 @@ export class AuthController {
     try {
       result = await this.authService.handleGoogleCallback({
         code: query.code,
+        cookieHeader: request.headers.cookie,
         state: query.state,
         error: query.error,
-        stateCookieValue: readCookie(
-          request.headers.cookie,
-          "google_oauth_state",
-        ),
       });
     } catch (error) {
       response.clearCookie(
         "google_oauth_state",
-        this.authCookieService.clearOptions(),
+        this.authService.cookieClearOptions(),
       );
       throw error;
     }
 
     response.clearCookie(
       "google_oauth_state",
-      this.authCookieService.clearOptions(),
+      this.authService.cookieClearOptions(),
     );
     if (result.kind === "success") {
       response.cookie(
         "access_token",
         result.accessToken,
-        this.authCookieService.accessTokenOptions(),
+        this.authService.accessTokenCookieOptions(),
       );
     }
     response.redirect(result.redirectUrl);
@@ -102,7 +94,7 @@ export class AuthController {
   logout(@Res({ passthrough: true }) response: Response): void {
     response.clearCookie(
       "access_token",
-      this.authCookieService.clearOptions(),
+      this.authService.cookieClearOptions(),
     );
   }
 }

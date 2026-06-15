@@ -16,6 +16,14 @@ Swagger / OpenAPI は BFF API の公開契約を表す。
 * Entity は OpenAPI に公開しない
 * Service / Resource は Swagger を知らない状態にする
 * Swagger のためだけの example / schema / decorator は `src/docs` に集約する
+* Controller と Service は 1対1 とし、Controller は対応する Service だけを inject する
+* Controller は複数 Service / helper service / Resource / Entity / HttpService を扱わない
+* Resource は Entity を返し、DTO を返さない
+* Service は Entity -> DTO 変換を担当する
+* Entity は Swagger/OpenAPI に公開しない
+* DI 不要な helper は `src/utility` に置き、Utility に NestJS DI 依存を入れない
+* `src/provider/` と `src/module/` は作らない
+* `*.module.ts` は責務を持つレイヤーの近くに置く
 
 ## ディレクトリ構成
 
@@ -109,7 +117,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserDto } from '@/interface/dto/user.dto';
+import { UserDto } from '@/dto/user.dto';
 
 export const GetUserDocs = () =>
   applyDecorators(

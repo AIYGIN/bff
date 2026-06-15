@@ -1,580 +1,196 @@
-# docs/bff-code-design-rules.md
-
 # BFF Code Design Rules
 
 ## 目的
 
-このドキュメントは NestJS BFF のコード設計ルールを定義する。
+NestJS BFF の公開 API 契約を維持しながら、HTTP、ユースケース、外部 API、
+認証、内部型、補助関数の責務を分離する。
 
-BFF は以下を責務とする。
+依存方向は必ず次の一方向とする。
 
-* Frontend 向けの API ルーティングを提供する
-* 外部 API / Platform / Provider API との差分を吸収する
-* 単一または複数 Resource の結果を Service で組み合わせる
-* Frontend に返す DTO を Service で確定する
-* Controller を薄く保つ
-* 外部 API 疎通の詳細を Resource に閉じる
-* Resource 用の Entity と BFF 公開用の DTO を分離する
+```txt
+Controller -> Service -> Resource -> External API
+```
 
 ## ディレクトリ構成
 
 ```txt
 src/
+  guard/
   controller/
-    *.controller.ts
-
-  services/
-    *.service.ts
-
-  resources/
-    *.resource.ts
-
+  service/
+  resource/
   interface/
-    dto/
-      *.dto.ts
-    entity/
-      *.entity.ts
-
+  dto/
+  entity/
   docs/
-    *.docs.ts
-    decorators/
-    schemas/
-    examples/
-```
-
-必要に応じて以下を追加してよい。
-
-```txt
-src/
-  modules/
-    *.module.ts
-
+  utility/
   common/
-    decorators/
-    filters/
-    guards/
-    interceptors/
-    pipes/
-    errors/
-    utils/
 ```
 
-## レイヤー責務
+- `src/provider/` と `src/module/` は作らない。
+- `service` と `resource` は単数形にする。
+- DTO は `src/dto/`、Entity は `src/entity/` に分離する。
+- `src/interface/` は DTO / Entity 以外の内部契約に使う。
+- `*.module.ts` は責務を持つレイヤーの近くに置く。
+- Controller を登録する feature module は原則 Controller の近くに置く。
+- 設定、logging、HTTP client などの共通 module は `src/common/` に置く。
+- module ファイルを集めるためだけのディレクトリを作らない。
 
 ## Controller
 
-Controller は routing と Service 呼び出しだけを担当する。
+Controller と Service は 1対1 にする。`AuthController -> AuthService`、
+`UserController -> UserService`、`TodoController -> TodoService` のように、
+Controller は対応する Service だけを inject する。
 
-### 許可
+責務:
 
-* HTTP method / path の定義
-* request parameter / query / body の受け取り
-* DTO 型の受け取り
-* Service の呼び出し
-* Service から返された DTO の返却
-* `src/docs` で定義した Swagger decorator の付与
+- HTTP routing
+- NestJS annotation
+- `src/docs` の docs decorator
+- request DTO、path、query、header の受け取り
+- 対応する Service の呼び出し
+- response DTO の返却
+- redirect、Cookie、status code など HTTP response の確定
 
-### 禁止
+禁止:
 
-* Resource を直接呼ばない
-* Entity を import しない
-* 外部 API を直接呼ばない
-* 複数 Resource の合成処理を書かない
-* 業務ロジックを書かない
-* 外部 API response を加工しない
-* try-catch を乱用して個別にエラー変換しない
-* Swagger / OpenAPI の詳細定義を大量に直書きしない
-
-### 例
-
-```ts
-@Controller('users')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
-
-  @Get(':userId')
-  @GetUserDocs()
-  async getUser(
-    @Param('userId') userId: string,
-  ): Promise<UserDto> {
-    return this.userService.getUser({ userId });
-  }
-}
-```
+- 複数 Service を inject しない。
+- helper service を inject しない。
+- Resource、Entity、HttpService を import または直接利用しない。
+- 外部 API request / response を扱わない。
+- Entity -> DTO 変換や複数 Resource の合成をしない。
+- 業務ロジックや外部 API 固有 error mapping を書かない。
 
 ## Service
 
-Service は BFF のユースケース層とする。
+Service は BFF のユースケースを担当する。
 
-### 許可
+責務:
 
-* Controller から受け取った DTO / primitive value を処理する
-* 単一 Resource を呼び出す
-* 複数 Resource を呼び出して結果を合成する
-* Entity から DTO へ変換する
-* BFF として必要な業務ロジックを実装する
-* Controller に返す DTO を確定する
+- Controller から DTO / primitive value を受け取る。
+- 単一または複数 Resource を呼び出す。
+- BFF としてのエラーハンドリングを行う。
+- Resource が返した Entity -> DTO 変換を担当する。
+- 複数 Resource の Entity を合成する。
+- Controller に返す DTO または HTTP 操作用のユースケース結果を確定する。
+- DI が必要な設定値を受け取り、utility 関数へ明示引数として渡す。
 
-### 禁止
+禁止:
 
-* HTTP client を直接操作しない
-* 外部 API endpoint / header / query / body を直接組み立てない
-* Controller 固有 decorator に依存しない
-* Swagger / OpenAPI decorator を import しない
-* Resource の raw response を Controller に返さない
-* any で型エラーを回避しない
-
-### 例
-
-```ts
-@Injectable()
-export class UserService {
-  constructor(
-    private readonly userResource: UserResource,
-    private readonly pointResource: PointResource,
-  ) {}
-
-  async getUser(request: GetUserRequestDto): Promise<UserDto> {
-    const user = await this.userResource.getUser({
-      userId: request.userId,
-    });
-
-    const point = await this.pointResource.getPoint({
-      userId: request.userId,
-    });
-
-    return new UserDto({
-      id: user.id,
-      name: user.name,
-      point: point.amount,
-    });
-  }
-}
-```
+- HttpService、`@nestjs/axios`、Swagger decorator を import しない。
+- 外部 API endpoint / header / body の詳細を組み立てない。
+- Entity を Controller へ返さない。
+- `any` で型エラーを回避しない。
 
 ## Resource
 
-Resource は外部 API / Platform / Provider API との疎通層とする。
+Resource は外部 API との疎通境界とする。
 
-Resource は API や PF ごとにクラスを分ける。
+責務:
 
-### 許可
+- 外部 API request の作成と送信
+- 外部 API response の検証と内部表現への変換
+- 外部 API 固有 error mapping
+- Entity を返す
 
-* 外部 API request の作成
-* 外部 API への通信
-* 外部 API response の受け取り
-* 外部 API response から Entity への変換
-* API ごとの header / auth / endpoint / query / body の組み立て
-* API 固有 error の変換
+禁止:
 
-### 禁止
-
-* DTO を返さない
-* DTO を import しない
-* Service を import しない
-* Controller を import しない
-* Swagger / OpenAPI decorator を import しない
-* Frontend 表示都合の整形をしない
-* 複数 Resource の合成をしない
-* raw API response をそのまま Service に返さない
-
-### 例
-
-```ts
-@Injectable()
-export class UserResource {
-  constructor(private readonly httpClient: HttpClient) {}
-
-  async getUser(request: GetUserEntityRequest): Promise<GetUserEntityResponse> {
-    const response = await this.httpClient.get<ExternalUserResponse>(
-      `/external/users/${request.userId}`,
-    );
-
-    return new GetUserEntityResponse({
-      id: response.data.id,
-      name: response.data.display_name,
-      status: response.data.status,
-    });
-  }
-}
-```
-
-## Interface
-
-`src/interface` は BFF 内で使う型定義を置く。
-
-```txt
-src/interface/
-  dto/
-  entity/
-```
+- Resource は DTO を返さない、import しない。
+- Controller、Service、Swagger decorator を import しない。
+- Frontend 向けの表示変換をしない。
+- 複数 Resource の結果を合成しない。
+- raw response をそのまま Service に返さない。
 
 ## DTO
 
-DTO は Controller / Service の request / response を表す。
+DTO は Controller / Service の公開入出力に使う。
 
-### 用途
-
-* BFF API の公開契約
-* Controller input
-* Controller output
-* Service input
-* Service output
-* Swagger schema の元になる class
-
-### 命名ルール
-
-```txt
-{UseCase}RequestDto
-{UseCase}ResponseDto
-{Domain}Dto
-```
-
-### 例
-
-```ts
-export class GetUserRequestDto {
-  userId: string;
-}
-
-export class UserDto {
-  id: string;
-  name: string;
-  point: number;
-
-  constructor(args: UserDto) {
-    Object.assign(this, args);
-  }
-}
-```
+- request DTO は validation と Swagger property schema を持ってよい。
+- response DTO は BFF の公開 response body を表す。
+- 外部 API 固有 field を DTO に漏らさない。
+- DTO を Resource の戻り値にしない。
 
 ## Entity
 
-Entity は Resource の request / response を表す。
-
-### 用途
-
-* Resource に渡す request
-* Resource が返す response
-* 外部 API / PF のデータ構造を BFF 内部向けに正規化したもの
-
-### 命名ルール
-
-```txt
-{Resource}{Action}EntityRequest
-{Resource}{Action}EntityResponse
-{Domain}Entity
-```
-
-### 例
-
-```ts
-export class GetUserEntityRequest {
-  userId: string;
-
-  constructor(args: GetUserEntityRequest) {
-    Object.assign(this, args);
-  }
-}
-
-export class GetUserEntityResponse {
-  id: string;
-  name: string;
-  status: string;
-
-  constructor(args: GetUserEntityResponse) {
-    Object.assign(this, args);
-  }
-}
-```
-
-## DTO と Entity の境界
-
-DTO と Entity は明確に分離する。
-
-### DTO
-
-DTO は BFF API の公開契約である。
-
-Frontend に返す形、Controller が受け取る形、Service が扱う use case 単位の request / response は DTO とする。
-
-### Entity
-
-Entity は Resource の内部契約である。
-
-外部 API / PF との疎通に必要な request / response の正規化型は Entity とする。
-
-Entity は Controller response として返さない。
-
-## Import ルール
-
-### 許可
-
-```txt
-controller -> service
-controller -> dto
-controller -> docs
-
-service -> resource
-service -> dto
-service -> entity
-
-resource -> entity
-
-docs -> dto
-docs -> docs/decorators
-docs -> docs/schemas
-docs -> docs/examples
-```
-
-### 禁止
-
-```txt
-controller -> resource
-controller -> entity
-
-service -> docs
-service -> swagger decorator
-
-resource -> dto
-resource -> service
-resource -> docs
-resource -> swagger decorator
-
-docs -> service
-docs -> resource
-docs -> entity
-
-dto -> entity
-entity -> dto
-```
-
-## データ変換ルール
-
-基本方針:
-
-* 外部 API response から Entity への変換は Resource で行う
-* Entity から DTO への変換は Service で行う
-* Controller では変換しない
-* docs は変換処理に関与しない
-
-```txt
-HTTP Request
-  -> Controller
-  -> RequestDto
-  -> Service
-  -> EntityRequest
-  -> Resource
-  -> External API
-  -> EntityResponse
-  -> Service
-  -> ResponseDto
-  -> Controller
-  -> HTTP Response
-```
-
-## 複数 Resource を使う場合
-
-複数 Resource の合成は必ず Service で行う。
-
-```ts
-const user = await this.userResource.getUser(...);
-const point = await this.pointResource.getPoint(...);
-
-return new UserDto({
-  id: user.id,
-  name: user.name,
-  point: point.amount,
-});
-```
-
-Resource 同士を直接呼び出してはいけない。
-
-## Module ルール
-
-NestJS module は依存関係の境界を明示するために使う。
-
-基本方針:
-
-* Controller / Service / Resource は module に登録する
-* Service / Resource は provider として扱う
-* docs は provider として登録しない
-* docs は DI しない
-* docs は純粋な decorator 定義として扱う
-
-例:
-
-```ts
-@Module({
-  controllers: [UserController],
-  providers: [
-    UserService,
-    UserResource,
-    PointResource,
-  ],
-})
-export class UserModule {}
-```
-
-## Error Handling ルール
-
-Resource は外部 API 固有のエラーをそのまま漏らさない。
-
-Resource では以下を行う。
-
-* HTTP status を確認する
-* API 固有 error code を確認する
-* BFF 内部で扱う例外に変換する
-* secret / token / raw header をログに出さない
-
-Service では以下を行う。
-
-* 複数 Resource の整合性エラーを扱う
-* Frontend に返すべきエラー種別に変換する
-* Resource の詳細実装に依存しない
-
-Controller では原則として個別 try-catch を書かない。
-
-## Logging ルール
-
-ログに含めてよいもの:
-
-* request id
-* user id
-* resource name
-* external API name
-* status code
-* elapsed time
-* use case name
-
-ログに含めてはいけないもの:
-
-* access token
-* refresh token
-* password
-* cookie
-* 個人情報の raw data
-* 外部 API の raw response 全体
-
-## Test ルール
-
-### Controller test
-
-Controller test では以下を確認する。
-
-* route が Service を呼ぶこと
-* request DTO が Service に渡ること
-* Service の返り値がそのまま返ること
-
-Controller test では Resource を mock しない。Service を mock する。
-
-### Service test
-
-Service test では以下を確認する。
-
-* 単一 Resource の response を DTO に変換できること
-* 複数 Resource の response を合成できること
-* Resource error を適切に扱えること
-
-Service test では Resource を mock する。
-
-### Resource test
-
-Resource test では以下を確認する。
-
-* 正しい endpoint / method / header / body / query で外部 API を呼ぶこと
-* 外部 API response を Entity に変換できること
-* 外部 API error を BFF 内部 error に変換できること
-
-Resource test では HTTP client を mock する。
-
-## Codex 実装ルール
-
-Codex は実装時に以下の順序で進める。
-
-### 新規 API 追加時の実装順
-
-1. DTO を作成する
-2. Entity を作成する
-3. Resource を作成する
-4. Service を作成する
-5. Swagger docs decorator を作成する
-6. Controller を作成する
-7. Module に登録する
-8. Test を作成する
-9. lint / typecheck / test を実行する
-
-### 修正時の確認順
-
-1. Controller が薄いか確認する
-2. Controller が `src/docs` の decorator を使っているか確認する
-3. Service に変換 / 合成ロジックがあるか確認する
-4. Resource が外部 API 疎通だけに閉じているか確認する
-5. DTO と Entity が混ざっていないか確認する
-6. Entity が Controller response として返されていないか確認する
-7. 禁止 import がないか確認する
-8. Test が責務ごとに分かれているか確認する
-
-### Codex が守るべき禁止事項
-
-* Controller に業務ロジックを追加しない
-* Controller から Resource を直接呼ばない
-* Resource から DTO を返さない
-* Entity を Controller の response として返さない
-* DTO と Entity を同じ class で兼用しない
-* Service / Resource に Swagger decorator を import しない
-* any で型エラーを回避しない
-* 外部 API の raw response をそのまま返さない
-* secret をログ出力しない
-* 既存の責務分離を崩すリファクタを勝手にしない
-
-## Codex チェックリスト
-
-```txt
-[ ] Controller は routing と Service 呼び出しだけか
-[ ] Controller が Resource / Entity を import していないか
-[ ] Controller が docs decorator を使っているか
-[ ] Service が DTO を返しているか
-[ ] Service で Entity -> DTO 変換をしているか
-[ ] Service が Swagger decorator を import していないか
-[ ] Resource が Entity を返しているか
-[ ] Resource が DTO を import していないか
-[ ] DTO と Entity が分離されているか
-[ ] 複数 Resource の合成が Service にあるか
-[ ] 外部 API の詳細が Resource に閉じているか
-[ ] validation が必要な input DTO に付いているか
-[ ] test が Controller / Service / Resource の責務ごとに分かれているか
-[ ] lint / typecheck / test が通るか
-```
-
-## 最重要原則
-
-この BFF では、依存方向を必ず以下に保つ。
-
-```txt
-Controller
-  -> Service
-    -> Resource
-      -> External API
-```
-
-Swagger / OpenAPI の依存方向は以下に保つ。
-
-```txt
-Controller
-  -> docs
-    -> DTO
-```
-
-データ型の変換責務は以下に保つ。
-
-```txt
-External API Response
-  -> Resource
-  -> Entity
-  -> Service
-  -> DTO
-  -> Controller Response
-```
-
-Controller は薄く、Service はユースケース、Resource は外部 API 疎通、interface は DTO / Entity の契約定義、docs は Swagger / OpenAPI annotation 定義に集中させる。
+Entity は Resource の request / response に使う内部型とする。
+
+- 外部 API の request / response を BFF 内部向けに正規化する。
+- Resource は Entity を返す。
+- Service は Entity -> DTO 変換を行う。
+- Entity を Swagger/OpenAPI に公開しない。
+- Entity に `@nestjs/swagger` や `ApiProperty` を付けない。
+
+## Guard
+
+Guard は認証・認可処理だけを担当する。
+
+- request から認証情報を取得する。
+- 認証済み principal を `currentUser` として request に設定する。
+- 認証失敗は内部理由を漏らさない generic 401 にする。
+- Resource、Entity、HttpService、Swagger decorator を import しない。
+- 外部 API を呼び出さない。
+
+`jwt-auth.guard.ts`、`current-user.decorator.ts`、`current-user.ts` は
+`src/guard/` に置く。
+
+## Utility
+
+Utility は Service や Guard を補助する DI 不要の関数とする。
+
+- cookie、jwt-token、oauth-state、opaque-subject、validation などを置く。
+- `@Injectable()`、constructor injection、NestJS module/provider 登録を使わない。
+- Utility に NestJS DI 依存を入れない。
+- 設定、clock、codec など必要な値は引数として受け取る。
+- helper service をむやみに増やさない。
+
+Auth の `jwt-token` / `oauth-state` / `opaque-subject` / cookie helper は
+`src/utility/auth/` に置く。設定値は AuthService が AppConfigService から受け取り、
+utility 関数へ引数として渡す。
+
+## Auth
+
+- AuthController に対応する Service は AuthService のみとする。
+- AuthController は AuthService だけを inject する。
+- Auth helper service は原則作らない。
+- GoogleOAuthResource は `src/resource/auth/` に置き、Entity を返す。
+- JwtAuthGuard と current user 関連型は `src/guard/` に置く。
+- AuthService は OAuth state、opaque subject、JWT、Cookie utility を組み合わせる。
+
+## Module
+
+- Controller / Service / Resource / Guard は feature module で wiring する。
+- `src/provider/` と `src/module/` は作らない。
+- `*.module.ts` は責務を持つレイヤーの近くに置く。
+- DI 登録のためだけに Service module と Controller module を重複させない。
+- DI 不要な utility は provider 登録しない。
+
+## Test
+
+- Controller test は対応する Service だけを mock する。
+- Service test は Resource 呼び出し、Entity -> DTO 変換、エラー処理を確認する。
+- Resource test は外部 request / response 変換と error mapping を確認する。
+- Utility test は DI container なしで純粋な入出力を確認する。
+- Guard test は currentUser 設定と generic 401 を確認する。
+- Boundary test で import、constructor、OpenAPI、文書ルールを検証する。
+
+最低限の Boundary test:
+
+- Controller が Resource / Entity / HttpService を import していない。
+- Controller が対応する Service だけを inject している。
+- Service が HttpService / Swagger decorator を import していない。
+- Resource が DTO / Controller / Service / Swagger decorator を import していない。
+- Entity が Swagger decorator を持たず OpenAPI schema に出ていない。
+- Utility が NestJS DI に依存していない。
+- Guard が Resource / Entity / HttpService / Swagger decorator を import していない。
+- エージェント文書に同じレイヤー境界が記載されている。
+
+## 完了条件
+
+- API response body と Swagger/OpenAPI 契約を理由なく変更していない。
+- secret / token / cookie / authorization / password をログや fixture に残していない。
+- テストを弱めず、移動した責務に合わせて更新している。
+- 実装とエージェント文書が同じ構成・依存方向を表している。
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test --runInBand`
+- `pnpm build`

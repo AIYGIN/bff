@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
-import { AuthCookieService } from "../../services/auth/auth-cookie.service";
-import { AuthService } from "../../services/auth/auth.service";
+import { AuthService } from "../../service/auth/auth.service";
 import { AuthController } from "./auth.controller";
 
 describe("AuthController", () => {
@@ -20,25 +19,23 @@ describe("AuthController", () => {
 
   const createController = () => {
     const authService = {
-      beginGoogleLogin: jest.fn(),
-      getMe: jest.fn(),
-      handleGoogleCallback: jest.fn(),
-    } as unknown as jest.Mocked<AuthService>;
-    const authCookieService = {
-      accessTokenOptions: jest.fn().mockReturnValue({
+      accessTokenCookieOptions: jest.fn().mockReturnValue({
         ...cookieOptions,
         maxAge: 3_600_000,
       }),
-      clearOptions: jest.fn().mockReturnValue(cookieOptions),
-      oauthStateOptions: jest.fn().mockReturnValue({
+      beginGoogleLogin: jest.fn(),
+      cookieClearOptions: jest.fn().mockReturnValue(cookieOptions),
+      getMe: jest.fn(),
+      handleGoogleCallback: jest.fn(),
+      oauthStateCookieOptions: jest.fn().mockReturnValue({
         ...cookieOptions,
         maxAge: 600_000,
       }),
-    } as unknown as jest.Mocked<AuthCookieService>;
+    } as unknown as jest.Mocked<AuthService>;
 
     return {
       authService,
-      controller: new AuthController(authService, authCookieService),
+      controller: new AuthController(authService),
     };
   };
 
@@ -83,9 +80,9 @@ describe("AuthController", () => {
 
     expect(authService.handleGoogleCallback).toHaveBeenCalledWith({
       code: "code",
+      cookieHeader: "google_oauth_state=signed-state",
       error: undefined,
       state: "state",
-      stateCookieValue: "signed-state",
     });
     expect(response.cookie).toHaveBeenCalledWith(
       "access_token",
@@ -173,5 +170,6 @@ describe("AuthController", () => {
     expect(authService.beginGoogleLogin).not.toHaveBeenCalled();
     expect(authService.handleGoogleCallback).not.toHaveBeenCalled();
     expect(authService.getMe).not.toHaveBeenCalled();
+    expect(authService.cookieClearOptions).toHaveBeenCalledTimes(1);
   });
 });

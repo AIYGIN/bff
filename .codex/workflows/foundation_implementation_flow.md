@@ -9,6 +9,17 @@ API Controller Mock Flow または API Implementation Flow を使う。
 
 ## 基本原則
 
+- Controller と Service は 1対1 にする。
+- Controller は対応する Service だけを inject する。
+- Controller は複数 Service / helper service / Resource / Entity / HttpService を扱わない。
+- Resource は Entity を返し、DTO を返さない。
+- Service は Entity -> DTO 変換を担当する。
+- Entity は Swagger/OpenAPI に公開しない。
+- DI 不要な helper は utility に置き、Utility に NestJS DI 依存を入れない。
+- Auth の jwt-token / oauth-state / opaque-subject / cookie helper は utility に置く。
+- `src/provider/` と `src/module/` は作らない。
+- `*.module.ts` は責務を持つレイヤーの近くに置く。
+
 - 人間が基盤 Issue の目的、変更範囲、public interface、test plan、
   acceptance criteria を定義する。
 - エージェントは Issue 本文と最新コメントをもとに要求を確定する。

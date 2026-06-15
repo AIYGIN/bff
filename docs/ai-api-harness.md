@@ -106,13 +106,15 @@ Controller mock PR は、Frontend と API 契約を先に合意するための P
 - DTO
 - Swagger docs decorator
 - Controller
+- Controller と 1対1 の対応 Service
 - Controller module
 - Controller test
+- Service test
 - OpenAPI e2e test
 
 実装しないもの:
 
-- Service の新規作成・改修
+- 対応 Service 以外の Service の新規作成・改修
 - 外部 API 接続
 - Resource の本実装
 - DB 接続
@@ -123,22 +125,34 @@ Controller mock PR は、Frontend と API 契約を先に合意するための P
 
 Controller:
 
-- Controller mock PR では routing と固定 DTO の返却だけを行う。
+- Controller mock PR では routing と対応 Service の呼び出しだけを行う。
 - `src/docs` の decorator を付与する。
-- Service / Resource / Entity / HTTP client を import しない。
+- Controller と Service は 1対1 にする。
+- 本実装では Controller は対応する Service だけを inject する。
+- 複数 Service / helper service / Resource / Entity / HttpService を扱わない。
+- Controller mock では対応 Service 以外の Service / Resource / Entity / HTTP client を import しない。
 
 Service:
 
-- Controller mock PR では作成・改修しない。
+- Controller mock PR では Controller と 1対1 の対応 Service を作成し、固定 DTO を返す。
 - 本実装 PR で Controller に返す DTO を確定する。
+- Resource が返した Entity -> DTO 変換を担当する。
 - HTTP client を知らない。
 
 Resource:
 
 - 外部 API 接続 PR で追加する。
-- Entity を返す。
+- Resource は Entity を返し、DTO を返さない。
 - 外部 API error を BFF 内部例外に変換する。
 - 本実装 PR では外部 API request / response を Resource に閉じ込める。
+
+Utility / Module:
+
+- DI 不要な helper は `src/utility/` に置き、Utility に NestJS DI 依存を入れない。
+- Auth の jwt-token / oauth-state / opaque-subject / cookie helper は utility に置く。
+- `src/provider/` と `src/module/` は作らない。
+- `*.module.ts` は責務を持つレイヤーの近くに置く。
+- Entity は Swagger/OpenAPI に公開しない。
 
 Docs:
 

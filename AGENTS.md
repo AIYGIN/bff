@@ -27,3 +27,17 @@ NestJS BFF の実装では、以下のルールドキュメントを必ず確認
 - `docs/bff-code-design-rules.md`
 - `docs/swagger-openapi-rules.md`
 - `docs/ai-api-harness.md`
+
+## レイヤー境界
+
+- Controller と Service は 1対1 にする。
+- Controller は対応する Service だけを inject する。
+- Controller は複数 Service、helper service、Resource、Entity、HttpService を扱わない。
+- 依存方向は `Controller -> Service -> Resource -> External API` とする。
+- Resource は Entity を返し、DTO を返さない。
+- Service は Entity -> DTO 変換を担当する。
+- Entity は Swagger/OpenAPI に公開しない。
+- DI 不要な helper は service class にせず `src/utility/` の純粋関数にする。
+- Auth の jwt-token / oauth-state / opaque-subject / cookie helper は utility に置く。
+- `src/provider/` と `src/module/` は作らない。
+- `*.module.ts` は責務を持つ Controller、Service、Resource、Guard、common 基盤の近くに置く。

@@ -6,6 +6,17 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 
 ## 基本原則
 
+- Controller と Service は 1対1 にする。
+- Controller は対応する Service だけを inject する。
+- Controller は複数 Service / helper service / Resource / Entity / HttpService を扱わない。
+- Resource は Entity を返し、DTO を返さない。
+- Service は Entity -> DTO 変換を担当する。
+- Entity は Swagger/OpenAPI に公開しない。
+- DI 不要な helper は utility に置き、Utility に NestJS DI 依存を入れない。
+- Auth の jwt-token / oauth-state / opaque-subject / cookie helper は utility に置く。
+- `src/provider/` と `src/module/` は作らない。
+- `*.module.ts` は責務を持つレイヤーの近くに置く。
+
 - Controller mock PR で API 契約が合意済みであることを前提にする。
 - 本実装前に `implementation_planner` が実装計画 Issue を作る。
 - 人間が Issue コメントで実装計画をレビュー・補足する。
@@ -47,10 +58,10 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 含める:
 
 - `src/controller/*.controller.ts`
-- `src/services/*.service.ts`
-- `src/resources/*.resource.ts`
-- `src/interface/dto/*.dto.ts`
-- `src/interface/entity/*.entity.ts`
+- `src/service/*.service.ts`
+- `src/resource/*.resource.ts`
+- `src/dto/*.dto.ts`
+- `src/entity/*.entity.ts`
 - module wiring
 - Controller test
 - Service unit test

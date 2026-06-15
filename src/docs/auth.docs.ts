@@ -11,7 +11,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { AuthMeResponseDto } from "../interface/dto/auth/auth-me-response.dto";
+import { AuthMeResponseDto } from "../dto/auth/auth-me-response.dto";
 import { ErrorResponseSchema } from "./schemas/error-response.schema";
 
 const redirectHeaders = {
