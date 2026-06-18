@@ -115,3 +115,12 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+
+## AIツールの勧め
+
+- [Codex](https://openai.com/ja-JP/codex/)
+- [headroom](https://github.com/chopratejas/headroom)
+- [codegraph](https://github.com/colbymchenry/codegraph)
+- [Hermes Agent](https://hermes-agent.org/ja/)
+- [agentmemory](https://github.com/rohitg00/agentmemory)
