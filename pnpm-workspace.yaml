@@ -4,3 +4,5 @@ allowBuilds:
   '@scarf/scarf': false
   lefthook: false
   unrs-resolver: false
+overrides:
+  multer: 2.2.0
