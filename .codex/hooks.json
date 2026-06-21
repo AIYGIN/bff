@@ -1,5 +1,18 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -lc 'codegraph sync'",
+            "timeout": 300,
+            "statusMessage": "Running codegraph sync"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": ".*",
