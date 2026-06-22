@@ -16,6 +16,7 @@ NestJS BFF の実装前に読む:
 - `docs/bff-code-design-rules.md`
 - `docs/swagger-openapi-rules.md`
 - `docs/ai-api-harness.md`
+- `docs/layer-boundaries.md`
 
 作業種別ごとの詳細は必要なものだけ読む:
 

@@ -3,10 +3,10 @@ import {
   AppLogger,
   type ContextLogger,
 } from "../../common/logging/app-logger.service";
-import type { GetUserRequestDto } from "../../interface/dto/user/get-user-request.dto";
-import { UserDto } from "../../interface/dto/user/user.dto";
-import { GetUserEntityRequest } from "../../interface/entity/user/get-user.entity";
-import { UserResource } from "../../resources/user/user.resource";
+import type { GetUserRequestDto } from "../../dto/user/get-user-request.dto";
+import { UserDto } from "../../dto/user/user.dto";
+import { GetUserEntityRequest } from "../../entity/get-user.entity";
+import { UserResource } from "../../resource/user/user.resource";
 
 @Injectable()
 export class UserService {

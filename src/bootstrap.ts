@@ -33,6 +33,15 @@ export const configureApp = (
     .setDescription("Frontend 向け BFF API")
     .setVersion("1.0")
     .addBearerAuth()
+    .addCookieAuth(
+      "access_token",
+      {
+        type: "apiKey",
+        in: "cookie",
+        name: "access_token",
+      },
+      "accessTokenCookie",
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig, {

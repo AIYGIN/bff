@@ -16,6 +16,7 @@ Issue 駆動で実装するためのハーネス設計を定義する。
 
 - `AGENTS.md`
 - `docs/bff-code-design-rules.md`
+- `docs/layer-boundaries.md`
 - `docs/swagger-openapi-rules.md`
 - `.codex/workflows/api_controller_mock_flow.md`
 - `.codex/workflows/api_implementation_flow.md`
@@ -106,13 +107,15 @@ Controller mock PR は、Frontend と API 契約を先に合意するための P
 - DTO
 - Swagger docs decorator
 - Controller
+- Controller と 1対1 の対応 Service
 - Controller module
 - Controller test
+- Service test
 - OpenAPI e2e test
 
 実装しないもの:
 
-- Service の新規作成・改修
+- 対応 Service 以外の Service の新規作成・改修
 - 外部 API 接続
 - Resource の本実装
 - DB 接続
@@ -121,30 +124,8 @@ Controller mock PR は、Frontend と API 契約を先に合意するための P
 
 ## レイヤー責務
 
-Controller:
-
-- Controller mock PR では routing と固定 DTO の返却だけを行う。
-- `src/docs` の decorator を付与する。
-- Service / Resource / Entity / HTTP client を import しない。
-
-Service:
-
-- Controller mock PR では作成・改修しない。
-- 本実装 PR で Controller に返す DTO を確定する。
-- HTTP client を知らない。
-
-Resource:
-
-- 外部 API 接続 PR で追加する。
-- Entity を返す。
-- 外部 API error を BFF 内部例外に変換する。
-- 本実装 PR では外部 API request / response を Resource に閉じ込める。
-
-Docs:
-
-- Swagger/OpenAPI operation decorator を置く。
-- DTO は import してよい。
-- Service / Resource / Entity は import しない。
+Controller / Service / Resource / Guard / Utility / DTO / Entity / Module の
+責務と禁止事項は `docs/layer-boundaries.md` を正本とする。
 
 ## TDD 完了条件
 

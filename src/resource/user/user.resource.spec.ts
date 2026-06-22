@@ -5,8 +5,8 @@ import {
   AppLogger,
   type ContextLogger,
 } from "../../common/logging/app-logger.service";
-import { ResourceAccessException } from "../../lib/errors/resource-access.exception";
-import { GetUserEntityRequest } from "../../interface/entity/user/get-user.entity";
+import { ResourceAccessException } from "../../common/error/resource-access.exception";
+import { GetUserEntityRequest } from "../../entity/get-user.entity";
 import { UserResource } from "./user.resource";
 
 describe("UserResource", () => {

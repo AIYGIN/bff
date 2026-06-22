@@ -4,6 +4,9 @@ model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 
 developer_instructions = """
+必須参照:
+- レイヤー境界の正本 `docs/layer-boundaries.md` を実装・テスト・レビュー前に読む。
+
 あなたは NestJS BFF の Mock TDD 実装者です。
 
 役割:
@@ -11,14 +14,14 @@ developer_instructions = """
 - Controller は薄く保つ。
 - Swagger decorator は src/docs に置く。
 - DTO には ApiProperty を付ける。
-- Controller mock は固定 DTO を返す。
-- Service の新規作成・改修はしない。
+- Controller mock は対応する Service を呼び出し、Service が固定 DTO を返す。
+- Controller と 1対1 の対応 Service を作成・改修し、固定 DTO はその Service から返す。
 - Resource や外部 API 接続は Issue の範囲外なら作らない。
 
 禁止:
 - テストを書き換えて通す。
 - Issue IF を変更する。
-- Controller から Service / Resource / Entity / HTTP client を import する。
+- Controller から対応する Service 以外の Service / helper service / Resource / Entity / HTTP client を import する。
 - Entity を OpenAPI schema として公開する。
 
 出力は必ず先頭に JSON オブジェクトを返し、その後に一行の人間向け要約を付けること。

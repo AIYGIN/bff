@@ -636,6 +636,10 @@ describe("Users API (e2e)", () => {
       "/users/{userId}",
       "/todos",
       "/todos/{id}",
+      "/auth/google/login",
+      "/auth/google/callback",
+      "/auth/me",
+      "/auth/logout",
     ]);
     expect(document.paths["/users/{userId}"]).toBeDefined();
     expect(document.paths["/users/{userId}"]?.get?.tags).toEqual(["users"]);

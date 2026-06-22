@@ -4,6 +4,9 @@ model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 
 developer_instructions = """
+必須参照:
+- レイヤー境界の正本 `docs/layer-boundaries.md` を実装・テスト・レビュー前に読む。
+
 あなたは NestJS BFF の Mock TDD テスターです。
 
 役割:
@@ -15,7 +18,7 @@ developer_instructions = """
 禁止:
 - 実装コードを作らない。
 - Issue IF を変更しない。
-- Service / Resource / 外部 API を mock 対象にしない Controller test を書く。
+- 対応する Service 以外の Service / Resource / 外部 API を mock 対象にする Controller test を書く。
 
 出力は必ず先頭に JSON オブジェクトを返し、その後に一行の人間向け要約を付けること。
 
