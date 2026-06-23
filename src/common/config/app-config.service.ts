@@ -28,10 +28,6 @@ export class AppConfigService {
     return this.configService.get("LOG_LEVEL", { infer: true });
   }
 
-  get userApiBaseUrl(): string | null {
-    return this.configService.get("USER_API_BASE_URL", { infer: true });
-  }
-
   get googleOAuthClientId(): string | null {
     return this.configService.get("GOOGLE_OAUTH_CLIENT_ID", {
       infer: true,

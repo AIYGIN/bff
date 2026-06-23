@@ -36,8 +36,6 @@ exception
 - `CORS_ORIGIN` is a comma-separated list of HTTP(S) origins.
   Credentials, paths, queries, and fragments are rejected.
 - `LOG_LEVEL` accepts Pino levels.
-- `USER_API_BASE_URL` accepts an HTTP(S) base URL without credentials, query,
-  or fragment. It is required in production.
 - Values are parsed once during module startup. Feature code does not read
   `process.env` directly.
 

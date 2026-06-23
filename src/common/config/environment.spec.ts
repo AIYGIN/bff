@@ -3,7 +3,6 @@ import { validateEnvironment } from "./environment";
 describe("validateEnvironment", () => {
   const productionAuthEnvironment = {
     NODE_ENV: "production",
-    USER_API_BASE_URL: "https://users.example.com",
     GOOGLE_OAUTH_CLIENT_ID: "google-client",
     GOOGLE_OAUTH_CLIENT_SECRET: "google-secret",
     GOOGLE_OAUTH_REDIRECT_URI:
@@ -25,7 +24,6 @@ describe("validateEnvironment", () => {
       PORT: 3001,
       CORS_ORIGINS: ["http://localhost:3000"],
       LOG_LEVEL: "debug",
-      USER_API_BASE_URL: null,
       GOOGLE_OAUTH_CLIENT_ID: null,
       GOOGLE_OAUTH_CLIENT_SECRET: null,
       GOOGLE_OAUTH_REDIRECT_URI: null,
@@ -61,7 +59,6 @@ describe("validateEnvironment", () => {
         "https://admin.example.com",
       ],
       LOG_LEVEL: "warn",
-      USER_API_BASE_URL: "https://users.example.com",
       GOOGLE_OAUTH_CLIENT_ID: "google-client",
       GOOGLE_OAUTH_CLIENT_SECRET: "google-secret",
       GOOGLE_OAUTH_REDIRECT_URI:
@@ -95,14 +92,6 @@ describe("validateEnvironment", () => {
     ]);
   });
 
-  it("normalizes the User API base URL", () => {
-    expect(
-      validateEnvironment({
-        USER_API_BASE_URL: "https://users.example.com/api/",
-      }).USER_API_BASE_URL,
-    ).toBe("https://users.example.com/api");
-  });
-
   it.each([
     [{ NODE_ENV: "staging" }, "NODE_ENV"],
     [{ PORT: "0" }, "PORT"],
@@ -115,19 +104,6 @@ describe("validateEnvironment", () => {
     [{ CORS_ORIGIN: "https://example.com?token=secret" }, "CORS_ORIGIN"],
     [{ CORS_ORIGIN: "https://example.com#fragment" }, "CORS_ORIGIN"],
     [{ LOG_LEVEL: "verbose" }, "LOG_LEVEL"],
-    [{ USER_API_BASE_URL: "not-a-url" }, "USER_API_BASE_URL"],
-    [
-      { USER_API_BASE_URL: "https://user:pass@users.example.com" },
-      "USER_API_BASE_URL",
-    ],
-    [
-      { USER_API_BASE_URL: "https://users.example.com?token=secret" },
-      "USER_API_BASE_URL",
-    ],
-    [
-      { USER_API_BASE_URL: "https://users.example.com#fragment" },
-      "USER_API_BASE_URL",
-    ],
     [{ OAUTH_STATE_TTL_SECONDS: "299" }, "OAUTH_STATE_TTL_SECONDS"],
     [{ OAUTH_STATE_TTL_SECONDS: "901" }, "OAUTH_STATE_TTL_SECONDS"],
     [{ JWT_ACCESS_TTL_SECONDS: "299" }, "JWT_ACCESS_TTL_SECONDS"],
@@ -147,7 +123,6 @@ describe("validateEnvironment", () => {
   });
 
   it.each([
-    "USER_API_BASE_URL",
     "GOOGLE_OAUTH_CLIENT_ID",
     "GOOGLE_OAUTH_CLIENT_SECRET",
     "GOOGLE_OAUTH_REDIRECT_URI",

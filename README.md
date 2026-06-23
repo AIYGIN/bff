@@ -40,7 +40,6 @@ cp .env.example .env
 | `PORT` | `3001` | HTTP listen port (`1` to `65535`) |
 | `CORS_ORIGIN` | `http://localhost:3000` | Comma-separated HTTP(S) origins |
 | `LOG_LEVEL` | `debug` in development/test, `info` in production | Pino log level |
-| `USER_API_BASE_URL` | unset | User API URL; required in production |
 
 Environment values are validated during application startup. Logs are emitted
 as JSON to stdout. Access logs include a request ID, method, query-free path,
@@ -60,7 +59,7 @@ pnpm run start
 pnpm run start:dev
 
 # production mode
-NODE_ENV=production USER_API_BASE_URL=https://users.example.com pnpm run start:prod
+NODE_ENV=production pnpm run start:prod
 ```
 
 ## Run tests

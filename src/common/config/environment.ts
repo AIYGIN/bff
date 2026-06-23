@@ -21,7 +21,6 @@ export interface EnvironmentVariables {
   PORT: number;
   CORS_ORIGINS: readonly string[];
   LOG_LEVEL: LogLevel;
-  USER_API_BASE_URL: string | null;
   GOOGLE_OAUTH_CLIENT_ID: string | null;
   GOOGLE_OAUTH_CLIENT_SECRET: string | null;
   GOOGLE_OAUTH_REDIRECT_URI: string | null;
@@ -77,16 +76,6 @@ const parseCorsOrigin = (value: string): string => {
   }
 
   return url.origin;
-};
-
-const parseUserApiBaseUrl = (value: unknown): string => {
-  const url = parseHttpUrl("USER_API_BASE_URL", value);
-  if (url.search !== "" || url.hash !== "") {
-    throw new Error("USER_API_BASE_URL must not include query or fragment");
-  }
-
-  const normalizedPath = url.pathname.replace(/\/+$/, "");
-  return `${url.origin}${normalizedPath}`;
 };
 
 const parseOptionalNonEmpty = (
@@ -232,17 +221,6 @@ export const validateEnvironment = (
     throw new Error(`LOG_LEVEL must be one of: ${LOG_LEVELS.join(", ")}`);
   }
 
-  const rawUserApiBaseUrl = environment.USER_API_BASE_URL;
-  const userApiBaseUrl =
-    rawUserApiBaseUrl === undefined ||
-    rawUserApiBaseUrl === null ||
-    rawUserApiBaseUrl === ""
-      ? null
-      : parseUserApiBaseUrl(rawUserApiBaseUrl);
-  if (rawNodeEnv === "production" && userApiBaseUrl === null) {
-    throw new Error("USER_API_BASE_URL is required in production");
-  }
-
   const googleOAuthClientId = parseOptionalNonEmpty(
     "GOOGLE_OAUTH_CLIENT_ID",
     environment.GOOGLE_OAUTH_CLIENT_ID,
@@ -339,7 +317,6 @@ export const validateEnvironment = (
     PORT: port,
     CORS_ORIGINS: corsOrigins,
     LOG_LEVEL: rawLogLevel,
-    USER_API_BASE_URL: userApiBaseUrl,
     GOOGLE_OAUTH_CLIENT_ID: googleOAuthClientId,
     GOOGLE_OAUTH_CLIENT_SECRET: googleOAuthClientSecret,
     GOOGLE_OAUTH_REDIRECT_URI: googleOAuthRedirectUri,

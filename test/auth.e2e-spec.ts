@@ -23,7 +23,6 @@ describe("Auth API (e2e)", () => {
     port: 3001,
     corsOrigins: ["http://localhost:3000"],
     logLevel: "silent",
-    userApiBaseUrl: null,
     googleOAuthClientId: "google-client",
     googleOAuthClientSecret: "google-secret",
     googleOAuthRedirectUri:

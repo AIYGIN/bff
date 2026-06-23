@@ -8,6 +8,7 @@ import { validateEnvironment } from "./environment";
   imports: [
     ConfigModule.forRoot({
       cache: true,
+      ignoreEnvFile: process.env.NODE_ENV === "test",
       isGlobal: true,
       validate: validateEnvironment,
     }),
