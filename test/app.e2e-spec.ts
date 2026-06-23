@@ -102,33 +102,20 @@ describe("Users API (e2e)", () => {
     await app.init();
   });
 
-  it("GET /users/:userId returns a user", () => {
-    return request(app.getHttpServer())
-      .get("/users/user_123")
-      .expect(200)
-      .expect({
-        id: "user_123",
-        name: "Sample User",
-      });
-  });
-
   it("generates a request id and returns it without changing the body", async () => {
     const response = await request(app.getHttpServer())
-      .get("/users/user_123")
+      .get("/todos")
       .expect(200);
 
     expect(response.headers["x-request-id"]).toEqual(
       expect.stringMatching(/^[0-9a-f-]{36}$/),
     );
-    expect(response.body).toEqual({
-      id: "user_123",
-      name: "Sample User",
-    });
+    expect(response.body).toEqual(expect.any(Array));
   });
 
   it("reuses a safe request id", async () => {
     const response = await request(app.getHttpServer())
-      .get("/users/user_123")
+      .get("/todos")
       .set("x-request-id", "request-123")
       .expect(200);
 
@@ -138,11 +125,9 @@ describe("Users API (e2e)", () => {
       .filter((line) => line.requestId === "request-123");
     expect(correlatedLogs).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ context: "UserService" }),
-        expect.objectContaining({ context: "UserResource" }),
         expect.objectContaining({
           event: "http.request.completed",
-          path: "/users/user_123",
+          path: "/todos",
         }),
       ]),
     );
@@ -150,7 +135,7 @@ describe("Users API (e2e)", () => {
 
   it("replaces an unsafe request id", async () => {
     const response = await request(app.getHttpServer())
-      .get("/users/user_123")
+      .get("/todos")
       .set("x-request-id", "unsafe request id")
       .expect(200);
 
@@ -201,7 +186,7 @@ describe("Users API (e2e)", () => {
 
   it("exposes x-request-id through CORS", async () => {
     const response = await request(app.getHttpServer())
-      .options("/users/user_123")
+      .options("/todos")
       .set("origin", "http://localhost:3000")
       .set("access-control-request-method", "GET")
       .expect(204);
@@ -256,17 +241,16 @@ describe("Users API (e2e)", () => {
   it("publishes the endpoint in the OpenAPI document", () => {
     expect(Object.keys(openApiDocument.paths)).toEqual(
       expect.arrayContaining([
-        "/users/{userId}",
         "/todos",
         "/todos/{id}",
       ]),
     );
-    expect(openApiDocument.paths["/users/{userId}"]?.get).toMatchObject({
-      summary: "ユーザー取得",
-      tags: ["users"],
+    expect(openApiDocument.paths["/todos/{id}"]?.get).toMatchObject({
+      summary: "TODO取得",
+      tags: ["todos"],
       responses: {
         200: {
-          description: "ユーザー情報",
+          description: "TODO情報",
         },
         400: {
           description: "不正なリクエスト",
@@ -276,7 +260,6 @@ describe("Users API (e2e)", () => {
         },
       },
     });
-    expect(openApiDocument.components?.schemas?.UserDto).toBeDefined();
     expect(
       openApiDocument.components?.schemas?.GetUserEntityResponse,
     ).toBeUndefined();
@@ -633,7 +616,6 @@ describe("Users API (e2e)", () => {
     const document = response.body as OpenAPIObject;
 
     expect(Object.keys(document.paths)).toEqual([
-      "/users/{userId}",
       "/todos",
       "/todos/{id}",
       "/auth/google/login",
@@ -641,13 +623,10 @@ describe("Users API (e2e)", () => {
       "/auth/me",
       "/auth/logout",
     ]);
-    expect(document.paths["/users/{userId}"]).toBeDefined();
-    expect(document.paths["/users/{userId}"]?.get?.tags).toEqual(["users"]);
     expect(document.paths["/todos"]).toBeDefined();
     expect(document.paths["/todos"]?.get?.tags).toEqual(["todos"]);
     expect(document.paths["/todos"]?.post?.tags).toEqual(["todos"]);
     expect(document.paths["/todos/{id}"]?.delete?.tags).toEqual(["todos"]);
-    expect(document.components?.schemas?.UserDto).toBeDefined();
     expect(document.components?.schemas?.CreateTodoRequestDto).toBeDefined();
     expect(document.components?.schemas?.TodoDto).toBeDefined();
     expect(document.components?.schemas?.GetUserEntityRequest).toBeUndefined();

@@ -34,6 +34,33 @@ export const GetTodosDocs = () =>
     }),
   );
 
+export const GetTodoDocs = () =>
+  applyDecorators(
+    ApiTags("todos"),
+    ApiOperation({
+      summary: "TODO取得",
+      description: "指定したTODOを取得する。",
+    }),
+    ApiParam({
+      name: "id",
+      description: "TODO ID",
+      required: true,
+      example: "todo-new",
+    }),
+    ApiOkResponse({
+      description: "TODO情報",
+      type: TodoDto,
+    }),
+    ApiBadRequestResponse({
+      description: "不正なリクエスト",
+      type: ErrorResponseSchema,
+    }),
+    ApiInternalServerErrorResponse({
+      description: "サーバーエラー",
+      type: ErrorResponseSchema,
+    }),
+  );
+
 export const CreateTodoDocs = () =>
   applyDecorators(
     ApiTags("todos"),

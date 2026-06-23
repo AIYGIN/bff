@@ -22,6 +22,17 @@ export class TodoService {
     ];
   }
 
+  getTodo(id: string): TodoDto {
+    void id;
+
+    return new TodoDto({
+      id: "todo-new",
+      title: "新しいTODO",
+      completed: false,
+      createdAt: "2026-06-05T02:00:00.000Z",
+    });
+  }
+
   createTodo(request: CreateTodoRequestDto): TodoDto {
     return new TodoDto({
       id: "todo-3",

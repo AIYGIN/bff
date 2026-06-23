@@ -12,6 +12,7 @@ import {
 import {
   CreateTodoDocs,
   DeleteTodoDocs,
+  GetTodoDocs,
   GetTodosDocs,
   UpdateTodoDocs,
 } from "../../docs/todos.docs";
@@ -28,6 +29,12 @@ export class TodoController {
   @GetTodosDocs()
   getTodos(): TodoDto[] {
     return this.todoService.getTodos();
+  }
+
+  @Get(":id")
+  @GetTodoDocs()
+  getTodo(@Param("id") id: string): TodoDto {
+    return this.todoService.getTodo(id);
   }
 
   @Post()
