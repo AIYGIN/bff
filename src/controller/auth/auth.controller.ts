@@ -20,11 +20,19 @@ import {
   LogoutDocs,
 } from "../../docs/auth.docs";
 import { AuthMeResponseDto } from "../../dto/auth/auth-me-response.dto";
-import { GoogleCallbackQueryDto } from "../../dto/auth/google-callback-query.dto";
 import {
   AuthService,
   type HandleGoogleCallbackResult,
 } from "../../service/auth/auth.service";
+
+type GoogleCallbackQuery = {
+  code?: unknown;
+  error?: unknown;
+  state?: unknown;
+};
+
+const optionalString = (value: unknown): string | undefined =>
+  typeof value === "string" ? value : undefined;
 
 @Controller("auth")
 export class AuthController {
@@ -45,17 +53,17 @@ export class AuthController {
   @Get("google/callback")
   @GoogleCallbackDocs()
   async googleCallback(
-    @Query() query: GoogleCallbackQueryDto,
+    @Query() query: GoogleCallbackQuery,
     @Req() request: Request,
     @Res() response: Response,
   ): Promise<void> {
     let result: HandleGoogleCallbackResult;
     try {
       result = await this.authService.handleGoogleCallback({
-        code: query.code,
+        code: optionalString(query.code),
         cookieHeader: request.headers.cookie,
-        state: query.state,
-        error: query.error,
+        state: optionalString(query.state),
+        error: optionalString(query.error),
       });
     } catch (error) {
       response.clearCookie(

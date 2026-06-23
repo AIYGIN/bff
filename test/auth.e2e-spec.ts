@@ -174,6 +174,31 @@ describe("Auth API (e2e)", () => {
     expect(me.body).not.toHaveProperty("subject");
   });
 
+  it("accepts provider callback query parameters that are not part of the BFF contract", async () => {
+    const login = await beginLogin();
+
+    const callback = await request(app.getHttpServer())
+      .get("/auth/google/callback")
+      .set("Cookie", login.stateCookie)
+      .query({
+        authuser: "0",
+        code: "authorization-code",
+        hd: "example.com",
+        iss: "https://accounts.google.com",
+        prompt: "consent",
+        scope: "openid email profile",
+        state: login.state,
+      })
+      .expect(302);
+
+    expect(callback.headers.location).toBe(
+      "http://localhost:3000/auth/success",
+    );
+    expect(googleOAuthResource.exchangeAuthorizationCode).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "authorization-code" }),
+    );
+  });
+
   it("omits profileImageUrl when Google UserInfo has no picture", async () => {
     googleOAuthResource.getUserInfo.mockResolvedValue({
       providerUserId: "google-user-123",
