@@ -11,7 +11,7 @@ Entity の責務と依存方向を定義する。この文書をレイヤー境�
 ## 依存方向
 
 ```txt
-Controller -> Service -> Resource -> External API
+Controller -> Service -> Resource -> External API / common client
 ```
 
 逆方向の依存やレイヤーを飛び越える依存を作らない。
@@ -39,6 +39,8 @@ src/
 - `*.module.ts` は責務を持つレイヤーの近くに置く。
 - feature module は原則 Controller の近くに置く。
 - 設定、logging、HTTP client などの共通 module は `src/common/` に置く。
+- DB client など接続責務が大きい共通 client は `src/common/` に置き、
+  Resource から利用する。
 - module を集めるためだけのディレクトリや重複 module を作らない。
 
 ## Controller
@@ -95,10 +97,15 @@ Service は BFF のユースケースを担当する。
 ## Resource
 
 Resource は外部 API との疎通境界とする。
+TODO のように DB 永続化を扱う場合も、Controller / Service は DB client を
+直接扱わず、Resource が `src/common/` の DB client を介して接続する。
+Resource は API を繋ぐ形を基本とするが、DB client の生成・設定・secret 管理は
+責務が大きいため common に置く。
 
 責務:
 
 - 外部 API request の作成と送信
+- DB query の作成と送信（DB client 自体の生成・設定は common）
 - 外部 API response の検証と内部表現への変換
 - 外部 API 固有 error mapping
 - Entity を返す

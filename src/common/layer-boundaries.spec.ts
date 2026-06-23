@@ -130,7 +130,8 @@ describe("layer boundaries", () => {
     const requiredRules = [
       /Controller.*Service.*1対1/s,
       /対応する Service だけを inject/s,
-      /Controller -> Service -> Resource -> External API/,
+      /Controller -> Service -> Resource -> External API \/ common client/,
+      /DB client.*common/s,
       /src\/provider\//,
       /src\/module\//,
       /Resource.*Entity を返/s,

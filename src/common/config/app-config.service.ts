@@ -99,4 +99,14 @@ export class AppConfigService {
       infer: true,
     });
   }
+
+  get supabaseUrl(): string | null {
+    return this.configService.get("SUPABASE_URL", { infer: true });
+  }
+
+  get supabaseServiceRoleKey(): string | null {
+    return this.configService.get("SUPABASE_SERVICE_ROLE_KEY", {
+      infer: true,
+    });
+  }
 }

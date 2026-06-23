@@ -16,6 +16,9 @@ import type { App } from "supertest/types";
 import { AppModule } from "./../src/app.module";
 import { configureApp } from "./../src/bootstrap";
 import { LOG_STREAM } from "./../src/common/logging/logging.module";
+import { JwtAuthGuard } from "./../src/guard/jwt-auth.guard";
+import { TodoResource } from "./../src/resource/todo/todo.resource";
+import { AuthService } from "./../src/service/auth/auth.service";
 
 @ApiExcludeController()
 @Controller("_test")
@@ -44,6 +47,55 @@ describe("Users API (e2e)", () => {
   let app: INestApplication<App>;
   let openApiDocument: OpenAPIObject;
   let logLines: string[];
+  const currentUser = {
+    subject: "user-1",
+    displayName: "User 1",
+  };
+  const todoResource = {
+    create: jest.fn(async ({ title }: { title: string }) => ({
+      id: "todo-3",
+      owner_user_id: currentUser.subject,
+      title,
+      completed: false,
+      created_at: "2026-06-05T02:00:00.000Z",
+      updated_at: "2026-06-05T02:00:00.000Z",
+    })),
+    deleteByIdForOwner: jest.fn(async () => true),
+    findByIdForOwner: jest.fn(async () => ({
+      id: "todo-new",
+      owner_user_id: currentUser.subject,
+      title: "新しいTODO",
+      completed: false,
+      created_at: "2026-06-05T02:00:00.000Z",
+      updated_at: "2026-06-05T02:00:00.000Z",
+    })),
+    findManyByOwner: jest.fn(async () => [
+      {
+        id: "todo-new",
+        owner_user_id: currentUser.subject,
+        title: "新しいTODO",
+        completed: false,
+        created_at: "2026-06-05T02:00:00.000Z",
+        updated_at: "2026-06-05T02:00:00.000Z",
+      },
+      {
+        id: "todo-old",
+        owner_user_id: currentUser.subject,
+        title: "完了済みTODO",
+        completed: true,
+        created_at: "2026-06-05T01:00:00.000Z",
+        updated_at: "2026-06-05T01:00:00.000Z",
+      },
+    ]),
+    updateCompletedByIdForOwner: jest.fn(async () => ({
+      id: "todo-new",
+      owner_user_id: currentUser.subject,
+      title: "新しいTODO",
+      completed: true,
+      created_at: "2026-06-05T02:00:00.000Z",
+      updated_at: "2026-06-05T02:00:00.000Z",
+    })),
+  };
 
   const parseJsonBody = (
     req: Request,
@@ -79,6 +131,7 @@ describe("Users API (e2e)", () => {
 
   beforeEach(async () => {
     logLines = [];
+    jest.clearAllMocks();
     const logStream = {
       write: (line: string): boolean => {
         logLines.push(line);
@@ -92,10 +145,35 @@ describe("Users API (e2e)", () => {
       })
         .overrideProvider(LOG_STREAM)
         .useValue(logStream)
+        .overrideProvider(TodoResource)
+        .useValue(todoResource)
+        .overrideProvider(AuthService)
+        .useValue({
+          verifyAccessToken: jest.fn(async () => currentUser),
+        })
+        .overrideGuard(JwtAuthGuard)
+        .useValue({
+          canActivate: (context: {
+            switchToHttp: () => {
+              getRequest: () => { currentUser?: typeof currentUser };
+            };
+          }): boolean => {
+            context.switchToHttp().getRequest().currentUser = currentUser;
+            return true;
+          },
+        })
         .compile();
 
     app = moduleFixture.createNestApplication({ bodyParser: false });
     app.useLogger(app.get(Logger));
+    app.use((req: Request, _res: Response, next: NextFunction): void => {
+      const cookieHeader = req.headers.cookie;
+      req.headers.cookie =
+        typeof cookieHeader === "string" && cookieHeader.length > 0
+          ? `${cookieHeader}; access_token=test-token`
+          : "access_token=test-token";
+      next();
+    });
     app.use(parseJsonBody);
     openApiDocument = configureApp(app);
 
@@ -364,7 +442,7 @@ describe("Users API (e2e)", () => {
     expect(openApiDocument.paths["/todos"]?.post).toMatchObject({
       summary: "TODO作成",
       description:
-        "指定されたタイトルで新しいTODOを作成する。作成直後の completed は false として返す。",
+        "ログイン済みユーザーのTODOとして、指定されたタイトルで新しいTODOを作成する。作成直後の completed は false として返す。",
       tags: ["todos"],
       requestBody: {
         content: {
@@ -388,6 +466,9 @@ describe("Users API (e2e)", () => {
         },
         400: {
           description: "リクエストボディのバリデーションエラー",
+        },
+        401: {
+          description: "認証エラー",
         },
         500: {
           description: "サーバーエラー",
@@ -424,7 +505,8 @@ describe("Users API (e2e)", () => {
     expect(openApiDocument.paths["/api/todos/{id}"]).toBeUndefined();
     expect(openApiDocument.paths["/todos/{id}"]?.patch).toMatchObject({
       summary: "TODO完了状態更新",
-      description: "指定したTODOの完了状態を更新し、更新後のTODOを返す。",
+      description:
+        "ログイン済みユーザーが所有する指定TODOの完了状態を更新し、更新後のTODOを返す。",
       tags: ["todos"],
       parameters: [
         {
@@ -474,6 +556,15 @@ describe("Users API (e2e)", () => {
             },
           },
         },
+        401: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
         500: {
           content: {
             "application/json": {
@@ -506,7 +597,8 @@ describe("Users API (e2e)", () => {
   it("publishes GET /todos in the OpenAPI document", () => {
     expect(openApiDocument.paths["/todos"]?.get).toMatchObject({
       summary: "TODO一覧取得",
-      description: "TODO一覧を作成日時の新しい順で取得する。",
+      description:
+        "ログイン済みユーザーのTODO一覧を作成日時の新しい順で取得する。",
       tags: ["todos"],
       responses: {
         200: {
@@ -525,6 +617,9 @@ describe("Users API (e2e)", () => {
         500: {
           description: "サーバーエラー",
         },
+        401: {
+          description: "認証エラー",
+        },
       },
     });
     expect(openApiDocument.components?.schemas?.TodoDto).toBeDefined();
@@ -542,7 +637,7 @@ describe("Users API (e2e)", () => {
     expect(operation).toMatchObject({
       summary: "TODO削除",
       description:
-        "指定したTODOを削除する。成功時はレスポンス body を返さない。",
+        "ログイン済みユーザーが所有する指定TODOを削除する。成功時はレスポンス body を返さない。",
       tags: ["todos"],
       parameters: [
         {
@@ -561,6 +656,16 @@ describe("Users API (e2e)", () => {
         },
         404: {
           description: "TODOが見つかりません",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponseSchema",
+              },
+            },
+          },
+        },
+        401: {
+          description: "認証エラー",
           content: {
             "application/json": {
               schema: {

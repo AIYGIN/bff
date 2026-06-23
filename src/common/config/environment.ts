@@ -34,6 +34,8 @@ export interface EnvironmentVariables {
   JWT_AUDIENCE: string | null;
   SUBJECT_DERIVATION_SECRET: string | null;
   GOOGLE_OAUTH_TIMEOUT_MS: number;
+  SUPABASE_URL: string | null;
+  SUPABASE_SERVICE_ROLE_KEY: string | null;
 }
 
 const isOneOf = <T extends string>(
@@ -286,6 +288,15 @@ export const validateEnvironment = (
     1000,
     10000,
   );
+  const supabaseUrl = parseOptionalUrl(
+    "SUPABASE_URL",
+    environment.SUPABASE_URL,
+    rawNodeEnv,
+  );
+  const supabaseServiceRoleKey = parseOptionalNonEmpty(
+    "SUPABASE_SERVICE_ROLE_KEY",
+    environment.SUPABASE_SERVICE_ROLE_KEY,
+  );
 
   const productionValues = [
     ["GOOGLE_OAUTH_CLIENT_ID", googleOAuthClientId],
@@ -298,6 +309,8 @@ export const validateEnvironment = (
     ["JWT_ISSUER", jwtIssuer],
     ["JWT_AUDIENCE", jwtAudience],
     ["SUBJECT_DERIVATION_SECRET", subjectDerivationSecret],
+    ["SUPABASE_URL", supabaseUrl],
+    ["SUPABASE_SERVICE_ROLE_KEY", supabaseServiceRoleKey],
   ] as const;
   for (const [key, value] of productionValues) {
     requireProductionValue(rawNodeEnv, key, value);
@@ -330,5 +343,7 @@ export const validateEnvironment = (
     JWT_AUDIENCE: jwtAudience,
     SUBJECT_DERIVATION_SECRET: subjectDerivationSecret,
     GOOGLE_OAUTH_TIMEOUT_MS: googleOAuthTimeoutMs,
+    SUPABASE_URL: supabaseUrl,
+    SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
   };
 };
