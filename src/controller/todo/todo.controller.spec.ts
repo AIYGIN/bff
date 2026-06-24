@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { CreateTodoRequestDto } from "../../dto/todo/create-todo-request.dto";
 import { UpdateTodoRequestDto } from "../../dto/todo/update-todo-request.dto";
+import type { CurrentUser } from "../../guard/current-user";
 import { TodoService } from "../../service/todo/todo.service";
 import { TodoController } from "./todo.controller";
 
@@ -18,22 +19,33 @@ describe("TodoController", () => {
     type: "body",
     metatype: CreateTodoRequestDto,
   };
-  const todoService = {
-    createTodo: jest.fn(),
-    deleteTodo: jest.fn(),
-    getTodos: jest.fn(),
-    updateTodo: jest.fn(),
-  } as unknown as jest.Mocked<TodoService>;
-  const controller = new TodoController(todoService);
+  const currentUser: CurrentUser = {
+    subject: "usr_v1_1234567890123456789012345678901234567890123",
+    displayName: "TODO User",
+  };
+  let todoService: jest.Mocked<
+    Pick<
+      TodoService,
+      "createTodo" | "deleteTodo" | "getTodo" | "getTodos" | "updateTodo"
+    >
+  >;
+  let controller: TodoController;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    todoService = {
+      createTodo: jest.fn(),
+      deleteTodo: jest.fn(),
+      getTodo: jest.fn(),
+      getTodos: jest.fn(),
+      updateTodo: jest.fn(),
+    };
+    controller = new TodoController(todoService as unknown as TodoService);
   });
 
-  it("delegates TODO listing to TodoService", () => {
+  it("delegates authenticated TODO listing to TodoService", async () => {
     const response = [
       {
-        id: "todo-new",
+        id: "11111111-1111-1111-1111-111111111111",
         title: "新しいTODO",
         completed: false,
         createdAt: "2026-06-05T02:00:00.000Z",
@@ -45,13 +57,13 @@ describe("TodoController", () => {
         createdAt: "2026-06-05T01:00:00.000Z",
       },
     ];
-    todoService.getTodos.mockReturnValue(response);
+    todoService.getTodos.mockResolvedValue(response);
 
-    expect(controller.getTodos()).toBe(response);
-    expect(todoService.getTodos).toHaveBeenCalledTimes(1);
+    await expect(controller.getTodos(currentUser)).resolves.toBe(response);
+    expect(todoService.getTodos).toHaveBeenCalledWith(currentUser.subject);
   });
 
-  it("passes a validated create request to TodoService", async () => {
+  it("passes a validated create request and owner user id to TodoService", async () => {
     const request = (await validationPipe.transform(
       { title: "  請求書を確認する  " },
       bodyMetadata,
@@ -62,15 +74,47 @@ describe("TodoController", () => {
       completed: false,
       createdAt: "2026-06-05T02:00:00.000Z",
     };
-    todoService.createTodo.mockReturnValue(response);
+    todoService.createTodo.mockResolvedValue(response);
 
-    expect(controller.createTodo(request)).toBe(response);
-    expect(todoService.createTodo).toHaveBeenCalledWith(request);
+    await expect(controller.createTodo(request, currentUser)).resolves.toBe(
+      response,
+    );
+    expect(todoService.createTodo).toHaveBeenCalledWith(
+      request,
+      currentUser.subject,
+    );
   });
 
-  it("passes the TODO id to TodoService when deleting", () => {
-    expect(controller.deleteTodo("todo-new")).toBeUndefined();
-    expect(todoService.deleteTodo).toHaveBeenCalledWith("todo-new");
+  it("passes the TODO id and owner user id to TodoService when reading one TODO", async () => {
+    const response = {
+      id: "11111111-1111-1111-1111-111111111111",
+      title: "新しいTODO",
+      completed: false,
+      createdAt: "2026-06-05T02:00:00.000Z",
+    };
+    todoService.getTodo.mockResolvedValue(response);
+
+    await expect(
+      controller.getTodo("11111111-1111-1111-1111-111111111111", currentUser),
+    ).resolves.toBe(
+      response,
+    );
+    expect(todoService.getTodo).toHaveBeenCalledWith(
+      "11111111-1111-1111-1111-111111111111",
+      currentUser.subject,
+    );
+  });
+
+  it("passes the TODO id and owner user id to TodoService when deleting", async () => {
+    todoService.deleteTodo.mockResolvedValue(undefined);
+
+    await expect(
+      controller.deleteTodo("11111111-1111-1111-1111-111111111111", currentUser),
+    ).resolves.toBeUndefined();
+    expect(todoService.deleteTodo).toHaveBeenCalledWith(
+      "11111111-1111-1111-1111-111111111111",
+      currentUser.subject,
+    );
   });
 
   const expectValidationMessage = async (
@@ -112,23 +156,26 @@ describe("TodoController", () => {
       metatype: UpdateTodoRequestDto,
     };
 
-    it("accepts the path id and body and returns the updated TODO mock", async () => {
+    it("accepts the path id and body and passes owner user id to TodoService", async () => {
       const request = (await validationPipe.transform(
         { completed: true },
         updateBodyMetadata,
       )) as UpdateTodoRequestDto;
       const response = {
-        id: "todo-new",
+        id: "11111111-1111-1111-1111-111111111111",
         title: "新しいTODO",
         completed: true,
         createdAt: "2026-06-05T02:00:00.000Z",
       };
-      todoService.updateTodo.mockReturnValue(response);
+      todoService.updateTodo.mockResolvedValue(response);
 
-      expect(controller.updateTodo("todo-123", request)).toBe(response);
+      await expect(
+        controller.updateTodo("22222222-2222-2222-2222-222222222222", request, currentUser),
+      ).resolves.toBe(response);
       expect(todoService.updateTodo).toHaveBeenCalledWith(
-        "todo-123",
+        "22222222-2222-2222-2222-222222222222",
         request,
+        currentUser.subject,
       );
     });
 

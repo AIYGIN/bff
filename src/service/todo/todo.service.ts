@@ -1,60 +1,69 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import type { CreateTodoRequestDto } from "../../dto/todo/create-todo-request.dto";
 import { TodoDto } from "../../dto/todo/todo.dto";
 import type { UpdateTodoRequestDto } from "../../dto/todo/update-todo-request.dto";
+import type { TodoEntity } from "../../entity/todo.entity";
+import { TodoResource } from "../../resource/todo/todo.resource";
 
 @Injectable()
 export class TodoService {
-  getTodos(): TodoDto[] {
-    return [
-      new TodoDto({
-        id: "todo-new",
-        title: "新しいTODO",
-        completed: false,
-        createdAt: "2026-06-05T02:00:00.000Z",
-      }),
-      new TodoDto({
-        id: "todo-old",
-        title: "完了済みTODO",
-        completed: true,
-        createdAt: "2026-06-05T01:00:00.000Z",
-      }),
-    ];
+  constructor(private readonly todoResource: TodoResource) {}
+
+  async getTodos(ownerUserId: string): Promise<TodoDto[]> {
+    const entities = await this.todoResource.findManyByOwner(ownerUserId);
+    return entities.map(this.toDto);
   }
 
-  getTodo(id: string): TodoDto {
-    void id;
-
-    return new TodoDto({
-      id: "todo-new",
-      title: "新しいTODO",
-      completed: false,
-      createdAt: "2026-06-05T02:00:00.000Z",
-    });
+  async getTodo(id: string, ownerUserId: string): Promise<TodoDto> {
+    const entity = await this.todoResource.findByIdForOwner(id, ownerUserId);
+    if (entity === null) {
+      throw new NotFoundException("TODOが見つかりません");
+    }
+    return this.toDto(entity);
   }
 
-  createTodo(request: CreateTodoRequestDto): TodoDto {
-    return new TodoDto({
-      id: "todo-3",
+  async createTodo(
+    request: CreateTodoRequestDto,
+    ownerUserId: string,
+  ): Promise<TodoDto> {
+    const entity = await this.todoResource.create({
+      ownerUserId,
       title: request.title,
-      completed: false,
-      createdAt: "2026-06-05T02:00:00.000Z",
     });
+    return this.toDto(entity);
   }
 
-  deleteTodo(id: string): void {
-    void id;
+  async deleteTodo(id: string, ownerUserId: string): Promise<void> {
+    const deleted = await this.todoResource.deleteByIdForOwner(
+      id,
+      ownerUserId,
+    );
+    if (!deleted) {
+      throw new NotFoundException("TODOが見つかりません");
+    }
   }
 
-  updateTodo(id: string, request: UpdateTodoRequestDto): TodoDto {
-    void id;
-    void request;
-
-    return new TodoDto({
-      id: "todo-new",
-      title: "新しいTODO",
-      completed: true,
-      createdAt: "2026-06-05T02:00:00.000Z",
+  async updateTodo(
+    id: string,
+    request: UpdateTodoRequestDto,
+    ownerUserId: string,
+  ): Promise<TodoDto> {
+    const entity = await this.todoResource.updateCompletedByIdForOwner({
+      id,
+      ownerUserId,
+      completed: request.completed,
     });
+    if (entity === null) {
+      throw new NotFoundException("TODOが見つかりません");
+    }
+    return this.toDto(entity);
   }
+
+  private toDto = (entity: TodoEntity): TodoDto =>
+    new TodoDto({
+      id: entity.id,
+      title: entity.title,
+      completed: entity.completed,
+      createdAt: new Date(entity.created_at).toISOString(),
+    });
 }

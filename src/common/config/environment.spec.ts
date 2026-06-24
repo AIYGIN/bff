@@ -16,6 +16,8 @@ describe("validateEnvironment", () => {
     JWT_ISSUER: "bff",
     JWT_AUDIENCE: "frontend",
     SUBJECT_DERIVATION_SECRET: Buffer.alloc(32, 3).toString("base64url"),
+    SUPABASE_URL: "https://project.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "supabase-service-role-key",
   } as const;
 
   it("applies development defaults", () => {
@@ -37,6 +39,8 @@ describe("validateEnvironment", () => {
       JWT_AUDIENCE: null,
       SUBJECT_DERIVATION_SECRET: null,
       GOOGLE_OAUTH_TIMEOUT_MS: 5000,
+      SUPABASE_URL: null,
+      SUPABASE_SERVICE_ROLE_KEY: null,
     });
   });
 
@@ -50,6 +54,8 @@ describe("validateEnvironment", () => {
         OAUTH_STATE_TTL_SECONDS: "601",
         JWT_ACCESS_TTL_SECONDS: "3599",
         GOOGLE_OAUTH_TIMEOUT_MS: "4999",
+        SUPABASE_URL: "https://another-project.supabase.co",
+        SUPABASE_SERVICE_ROLE_KEY: "another-supabase-service-role-key",
       }),
     ).toEqual({
       NODE_ENV: "production",
@@ -77,6 +83,8 @@ describe("validateEnvironment", () => {
       SUBJECT_DERIVATION_SECRET:
         productionAuthEnvironment.SUBJECT_DERIVATION_SECRET,
       GOOGLE_OAUTH_TIMEOUT_MS: 4999,
+      SUPABASE_URL: "https://another-project.supabase.co/",
+      SUPABASE_SERVICE_ROLE_KEY: "another-supabase-service-role-key",
     });
   });
 
@@ -110,6 +118,15 @@ describe("validateEnvironment", () => {
     [{ JWT_ACCESS_TTL_SECONDS: "3601" }, "JWT_ACCESS_TTL_SECONDS"],
     [{ GOOGLE_OAUTH_TIMEOUT_MS: "999" }, "GOOGLE_OAUTH_TIMEOUT_MS"],
     [{ GOOGLE_OAUTH_TIMEOUT_MS: "10001" }, "GOOGLE_OAUTH_TIMEOUT_MS"],
+    [{ SUPABASE_URL: "not-a-url" }, "SUPABASE_URL"],
+    [
+      { SUPABASE_URL: "https://user:pass@project.supabase.co" },
+      "SUPABASE_URL",
+    ],
+    [
+      { SUPABASE_URL: "https://project.supabase.co?token=secret" },
+      "SUPABASE_URL",
+    ],
     [
       { GOOGLE_OAUTH_REDIRECT_URI: "https://example.com/wrong" },
       "GOOGLE_OAUTH_REDIRECT_URI",
@@ -133,6 +150,8 @@ describe("validateEnvironment", () => {
     "JWT_ISSUER",
     "JWT_AUDIENCE",
     "SUBJECT_DERIVATION_SECRET",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
   ])("requires %s in production", (key) => {
     const environment = { ...productionAuthEnvironment };
     delete (environment as Record<string, unknown>)[key];
