@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
@@ -39,7 +40,7 @@ export class TodoController {
   @Get(":id")
   @GetTodoDocs()
   getTodo(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: CurrentUserValue,
   ): Promise<TodoDto> {
     return this.todoService.getTodo(id, currentUser.subject);
@@ -58,7 +59,7 @@ export class TodoController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @DeleteTodoDocs()
   async deleteTodo(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: CurrentUserValue,
   ): Promise<void> {
     await this.todoService.deleteTodo(id, currentUser.subject);
@@ -67,7 +68,7 @@ export class TodoController {
   @Patch(":id")
   @UpdateTodoDocs()
   updateTodo(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @Body() request: UpdateTodoRequestDto,
     @CurrentUser() currentUser: CurrentUserValue,
   ): Promise<TodoDto> {

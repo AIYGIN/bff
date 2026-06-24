@@ -16,7 +16,6 @@ import type { App } from "supertest/types";
 import { AppModule } from "./../src/app.module";
 import { configureApp } from "./../src/bootstrap";
 import { LOG_STREAM } from "./../src/common/logging/logging.module";
-import { JwtAuthGuard } from "./../src/guard/jwt-auth.guard";
 import { TodoResource } from "./../src/resource/todo/todo.resource";
 import { AuthService } from "./../src/service/auth/auth.service";
 
@@ -48,9 +47,10 @@ describe("Users API (e2e)", () => {
   let openApiDocument: OpenAPIObject;
   let logLines: string[];
   const currentUser = {
-    subject: "user-1",
+    subject: "33333333-3333-3333-3333-333333333333",
     displayName: "User 1",
   };
+  const accessTokenCookie = "access_token=fake-token";
   const todoResource = {
     create: jest.fn(async ({ title }: { title: string }) => ({
       id: "todo-3",
@@ -62,7 +62,7 @@ describe("Users API (e2e)", () => {
     })),
     deleteByIdForOwner: jest.fn(async () => true),
     findByIdForOwner: jest.fn(async () => ({
-      id: "todo-new",
+      id: "11111111-1111-1111-1111-111111111111",
       owner_user_id: currentUser.subject,
       title: "新しいTODO",
       completed: false,
@@ -71,7 +71,7 @@ describe("Users API (e2e)", () => {
     })),
     findManyByOwner: jest.fn(async () => [
       {
-        id: "todo-new",
+        id: "11111111-1111-1111-1111-111111111111",
         owner_user_id: currentUser.subject,
         title: "新しいTODO",
         completed: false,
@@ -88,7 +88,7 @@ describe("Users API (e2e)", () => {
       },
     ]),
     updateCompletedByIdForOwner: jest.fn(async () => ({
-      id: "todo-new",
+      id: "11111111-1111-1111-1111-111111111111",
       owner_user_id: currentUser.subject,
       title: "新しいTODO",
       completed: true,
@@ -151,17 +151,6 @@ describe("Users API (e2e)", () => {
         .useValue({
           verifyAccessToken: jest.fn(async () => currentUser),
         })
-        .overrideGuard(JwtAuthGuard)
-        .useValue({
-          canActivate: (context: {
-            switchToHttp: () => {
-              getRequest: () => { currentUser?: typeof currentUser };
-            };
-          }): boolean => {
-            context.switchToHttp().getRequest().currentUser = currentUser;
-            return true;
-          },
-        })
         .compile();
 
     app = moduleFixture.createNestApplication({ bodyParser: false });
@@ -183,8 +172,8 @@ describe("Users API (e2e)", () => {
   it("generates a request id and returns it without changing the body", async () => {
     const response = await request(app.getHttpServer())
       .get("/todos")
+      .set("Cookie", accessTokenCookie)
       .expect(200);
-
     expect(response.headers["x-request-id"]).toEqual(
       expect.stringMatching(/^[0-9a-f-]{36}$/),
     );
@@ -192,8 +181,7 @@ describe("Users API (e2e)", () => {
   });
 
   it("reuses a safe request id", async () => {
-    const response = await request(app.getHttpServer())
-      .get("/todos")
+    const response = await request(app.getHttpServer()).get("/todos").set("Cookie", accessTokenCookie)
       .set("x-request-id", "request-123")
       .expect(200);
 
@@ -212,8 +200,7 @@ describe("Users API (e2e)", () => {
   });
 
   it("replaces an unsafe request id", async () => {
-    const response = await request(app.getHttpServer())
-      .get("/todos")
+    const response = await request(app.getHttpServer()).get("/todos").set("Cookie", accessTokenCookie)
       .set("x-request-id", "unsafe request id")
       .expect(200);
 
@@ -221,8 +208,7 @@ describe("Users API (e2e)", () => {
   });
 
   it("keeps the standard response for an unhandled exception", () => {
-    return request(app.getHttpServer())
-      .get("/_test/error")
+    return request(app.getHttpServer()).get("/_test/error").set("Cookie", accessTokenCookie)
       .expect(500)
       .expect({
         statusCode: 500,
@@ -231,8 +217,7 @@ describe("Users API (e2e)", () => {
   });
 
   it("writes minimal access logs without body, query, or credentials", async () => {
-    await request(app.getHttpServer())
-      .post("/todos?token=query-secret")
+    await request(app.getHttpServer()).post("/todos?token=query-secret").set("Cookie", accessTokenCookie)
       .set("authorization", "Bearer header-secret")
       .set("cookie", "session=cookie-secret")
       .send({ title: "body-secret" })
@@ -263,8 +248,7 @@ describe("Users API (e2e)", () => {
   });
 
   it("exposes x-request-id through CORS", async () => {
-    const response = await request(app.getHttpServer())
-      .options("/todos")
+    const response = await request(app.getHttpServer()).options("/todos").set("Cookie", accessTokenCookie)
       .set("origin", "http://localhost:3000")
       .set("access-control-request-method", "GET")
       .expect(204);
@@ -275,7 +259,7 @@ describe("Users API (e2e)", () => {
   });
 
   it("sanitizes structured fields emitted through the Nest logger", async () => {
-    await request(app.getHttpServer()).get("/_test/nest-log").expect(200);
+    await request(app.getHttpServer()).get("/_test/nest-log").set("Cookie", accessTokenCookie).expect(200);
 
     const serializedLogs = logLines.join("");
     expect(serializedLogs).not.toContain("nest-secret");
@@ -298,8 +282,8 @@ describe("Users API (e2e)", () => {
     async (status, path, _level, numericLevel) => {
       const response =
         status === 400
-          ? request(app.getHttpServer()).post(path).send({})
-          : request(app.getHttpServer()).get(path);
+          ? request(app.getHttpServer()).post(path).set("Cookie", accessTokenCookie).send({})
+          : request(app.getHttpServer()).get(path).set("Cookie", accessTokenCookie);
 
       await response.expect(status);
 
@@ -343,9 +327,8 @@ describe("Users API (e2e)", () => {
     ).toBeUndefined();
   });
 
-  it("POST /todos creates a TODO mock with the trimmed request title", () => {
-    return request(app.getHttpServer())
-      .post("/todos")
+  it("POST /todos creates a TODO item with the trimmed request title", () => {
+    return request(app.getHttpServer()).post("/todos").set("Cookie", accessTokenCookie)
       .send({ title: "  請求書を確認する  " })
       .expect(201)
       .expect({
@@ -356,13 +339,12 @@ describe("Users API (e2e)", () => {
       });
   });
 
-  it("GET /todos returns TODO mocks ordered by newest createdAt first", () => {
-    return request(app.getHttpServer())
-      .get("/todos")
+  it("GET /todos returns TODO items ordered by newest createdAt first", () => {
+    return request(app.getHttpServer()).get("/todos").set("Cookie", accessTokenCookie)
       .expect(200)
       .expect([
         {
-          id: "todo-new",
+          id: "11111111-1111-1111-1111-111111111111",
           title: "新しいTODO",
           completed: false,
           createdAt: "2026-06-05T02:00:00.000Z",
@@ -377,16 +359,14 @@ describe("Users API (e2e)", () => {
   });
 
   it("DELETE /todos/:id returns 204 with no response body", async () => {
-    const response = await request(app.getHttpServer())
-      .delete("/todos/todo-new")
+    const response = await request(app.getHttpServer()).delete("/todos/11111111-1111-1111-1111-111111111111").set("Cookie", accessTokenCookie)
       .expect(204);
 
     expect(response.text).toBe("");
   });
 
   it("validates POST /todos request body", async () => {
-    const missingTitle = await request(app.getHttpServer())
-      .post("/todos")
+    const missingTitle = await request(app.getHttpServer()).post("/todos").set("Cookie", accessTokenCookie)
       .send({})
       .expect(400);
     expect(
@@ -396,8 +376,7 @@ describe("Users API (e2e)", () => {
       "TODOを入力してください",
     );
 
-    const tooLongTitle = await request(app.getHttpServer())
-      .post("/todos")
+    const tooLongTitle = await request(app.getHttpServer()).post("/todos").set("Cookie", accessTokenCookie)
       .send({ title: "あ".repeat(81) })
       .expect(400);
     expect(
@@ -408,13 +387,12 @@ describe("Users API (e2e)", () => {
     );
   });
 
-  it("PATCH /todos/:id returns the updated TODO mock", () => {
-    return request(app.getHttpServer())
-      .patch("/todos/todo-123")
+  it("PATCH /todos/:id returns the updated TODO item", () => {
+    return request(app.getHttpServer()).patch("/todos/22222222-2222-2222-2222-222222222222").set("Cookie", accessTokenCookie)
       .send({ completed: true })
       .expect(200)
       .expect({
-        id: "todo-new",
+        id: "11111111-1111-1111-1111-111111111111",
         title: "新しいTODO",
         completed: true,
         createdAt: "2026-06-05T02:00:00.000Z",
@@ -425,8 +403,7 @@ describe("Users API (e2e)", () => {
     ["missing completed", {}],
     ["non-boolean completed", { completed: "true" }],
   ])("validates PATCH /todos/:id request body: %s", async (_name, body) => {
-    const response = await request(app.getHttpServer())
-      .patch("/todos/todo-123")
+    const response = await request(app.getHttpServer()).patch("/todos/22222222-2222-2222-2222-222222222222").set("Cookie", accessTokenCookie)
       .send(body)
       .expect(400);
 
@@ -633,7 +610,6 @@ describe("Users API (e2e)", () => {
 
   it("publishes DELETE /todos/:id in the OpenAPI document", () => {
     const operation = openApiDocument.paths["/todos/{id}"]?.delete;
-
     expect(operation).toMatchObject({
       summary: "TODO削除",
       description:
@@ -646,7 +622,6 @@ describe("Users API (e2e)", () => {
           required: true,
           schema: {
             type: "string",
-            example: "todo-new",
           },
         },
       ],
@@ -706,15 +681,13 @@ describe("Users API (e2e)", () => {
   });
 
   it("serves Swagger UI at /docs", () => {
-    return request(app.getHttpServer())
-      .get("/docs")
+    return request(app.getHttpServer()).get("/docs").set("Cookie", accessTokenCookie)
       .expect(200)
       .expect("content-type", /text\/html/);
   });
 
   it("serves OpenAPI JSON at /docs-json without Entity schemas", async () => {
-    const response = await request(app.getHttpServer())
-      .get("/docs-json")
+    const response = await request(app.getHttpServer()).get("/docs-json").set("Cookie", accessTokenCookie)
       .expect(200)
       .expect("content-type", /application\/json/);
 

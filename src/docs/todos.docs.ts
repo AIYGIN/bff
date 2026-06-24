@@ -54,7 +54,8 @@ export const GetTodoDocs = () =>
       name: "id",
       description: "TODO ID",
       required: true,
-      example: "todo-new",
+      schema: { type: "string", format: "uuid" },
+      example: "11111111-1111-1111-1111-111111111111",
     }),
     ApiOkResponse({
       description: "TODO情報",
@@ -121,7 +122,8 @@ export const DeleteTodoDocs = () =>
       name: "id",
       description: "削除対象 TODO ID",
       required: true,
-      example: "todo-new",
+      schema: { type: "string", format: "uuid" },
+      example: "11111111-1111-1111-1111-111111111111",
     }),
     ApiNoContentResponse({
       description: "TODO削除成功",
@@ -152,7 +154,7 @@ export const UpdateTodoDocs = () =>
     ApiParam({
       name: "id",
       description: "TODO ID",
-      type: String,
+      schema: { type: "string", format: "uuid" },
       required: true,
     }),
     ApiBody({

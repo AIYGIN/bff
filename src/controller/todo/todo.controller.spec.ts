@@ -45,7 +45,7 @@ describe("TodoController", () => {
   it("delegates authenticated TODO listing to TodoService", async () => {
     const response = [
       {
-        id: "todo-new",
+        id: "11111111-1111-1111-1111-111111111111",
         title: "新しいTODO",
         completed: false,
         createdAt: "2026-06-05T02:00:00.000Z",
@@ -87,18 +87,20 @@ describe("TodoController", () => {
 
   it("passes the TODO id and owner user id to TodoService when reading one TODO", async () => {
     const response = {
-      id: "todo-new",
+      id: "11111111-1111-1111-1111-111111111111",
       title: "新しいTODO",
       completed: false,
       createdAt: "2026-06-05T02:00:00.000Z",
     };
     todoService.getTodo.mockResolvedValue(response);
 
-    await expect(controller.getTodo("todo-new", currentUser)).resolves.toBe(
+    await expect(
+      controller.getTodo("11111111-1111-1111-1111-111111111111", currentUser),
+    ).resolves.toBe(
       response,
     );
     expect(todoService.getTodo).toHaveBeenCalledWith(
-      "todo-new",
+      "11111111-1111-1111-1111-111111111111",
       currentUser.subject,
     );
   });
@@ -107,10 +109,10 @@ describe("TodoController", () => {
     todoService.deleteTodo.mockResolvedValue(undefined);
 
     await expect(
-      controller.deleteTodo("todo-new", currentUser),
+      controller.deleteTodo("11111111-1111-1111-1111-111111111111", currentUser),
     ).resolves.toBeUndefined();
     expect(todoService.deleteTodo).toHaveBeenCalledWith(
-      "todo-new",
+      "11111111-1111-1111-1111-111111111111",
       currentUser.subject,
     );
   });
@@ -160,7 +162,7 @@ describe("TodoController", () => {
         updateBodyMetadata,
       )) as UpdateTodoRequestDto;
       const response = {
-        id: "todo-new",
+        id: "11111111-1111-1111-1111-111111111111",
         title: "新しいTODO",
         completed: true,
         createdAt: "2026-06-05T02:00:00.000Z",
@@ -168,10 +170,10 @@ describe("TodoController", () => {
       todoService.updateTodo.mockResolvedValue(response);
 
       await expect(
-        controller.updateTodo("todo-123", request, currentUser),
+        controller.updateTodo("22222222-2222-2222-2222-222222222222", request, currentUser),
       ).resolves.toBe(response);
       expect(todoService.updateTodo).toHaveBeenCalledWith(
-        "todo-123",
+        "22222222-2222-2222-2222-222222222222",
         request,
         currentUser.subject,
       );
