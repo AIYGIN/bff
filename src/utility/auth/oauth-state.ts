@@ -38,11 +38,7 @@ const isValidPayload = (
   ttlSeconds: number,
   nowSeconds: number,
 ): value is OAuthStatePayload => {
-  if (
-    value === null ||
-    typeof value !== "object" ||
-    Array.isArray(value)
-  ) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
   const payload = value as Record<string, unknown>;
@@ -84,10 +80,9 @@ export const createOAuthState = (
     iat: nowSeconds,
     exp: nowSeconds + config.ttlSeconds,
   };
-  const encodedPayload = Buffer.from(
-    JSON.stringify(payload),
-    "utf8",
-  ).toString("base64url");
+  const encodedPayload = Buffer.from(JSON.stringify(payload), "utf8").toString(
+    "base64url",
+  );
 
   return {
     state,

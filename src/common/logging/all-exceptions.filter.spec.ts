@@ -1,12 +1,6 @@
-import {
-  BadRequestException,
-  type ArgumentsHost,
-} from "@nestjs/common";
+import { BadRequestException, type ArgumentsHost } from "@nestjs/common";
 import type { HttpAdapterHost } from "@nestjs/core";
-import {
-  AppLogger,
-  type ContextLogger,
-} from "./app-logger.service";
+import { AppLogger, type ContextLogger } from "./app-logger.service";
 import { AllExceptionsFilter } from "./all-exceptions.filter";
 
 describe("AllExceptionsFilter", () => {

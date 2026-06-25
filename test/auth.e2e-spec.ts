@@ -25,8 +25,7 @@ describe("Auth API (e2e)", () => {
     logLevel: "silent",
     googleOAuthClientId: "google-client",
     googleOAuthClientSecret: "google-secret",
-    googleOAuthRedirectUri:
-      "http://localhost:3001/auth/google/callback",
+    googleOAuthRedirectUri: "http://localhost:3001/auth/google/callback",
     authSuccessRedirectUrl: "http://localhost:3000/auth/success",
     authFailureRedirectUrl: "http://localhost:3000/auth/failure",
     oauthStateSigningSecret: Buffer.alloc(32, 1).toString("base64url"),
@@ -43,11 +42,8 @@ describe("Auth API (e2e)", () => {
     setCookies: string | string[] | undefined,
     name: string,
   ): string => {
-    const values =
-      typeof setCookies === "string" ? [setCookies] : setCookies;
-    const cookie = values?.find((value) =>
-      value.startsWith(`${name}=`),
-    );
+    const values = typeof setCookies === "string" ? [setCookies] : setCookies;
+    const cookie = values?.find((value) => value.startsWith(`${name}=`));
     if (cookie === undefined) {
       throw new Error(`${name} Cookie was not set`);
     }
@@ -72,13 +68,10 @@ describe("Auth API (e2e)", () => {
   beforeEach(async () => {
     googleOAuthResource = {
       buildAuthorizationUrl: jest.fn(({ state, codeChallenge }) => {
-        const url = new URL(
-          "https://accounts.google.com/o/oauth2/v2/auth",
-        );
+        const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
         url.search = new URLSearchParams({
           client_id: "google-client",
-          redirect_uri:
-            "http://localhost:3001/auth/google/callback",
+          redirect_uri: "http://localhost:3001/auth/google/callback",
           response_type: "code",
           scope: "openid profile email",
           state,
@@ -96,15 +89,14 @@ describe("Auth API (e2e)", () => {
         profileImageUrl: "https://example.com/profile.jpg",
       }),
     };
-    const moduleFixture: TestingModule =
-      await Test.createTestingModule({
-        imports: [AppModule],
-      })
-        .overrideProvider(AppConfigService)
-        .useValue(config)
-        .overrideProvider(GoogleOAuthResource)
-        .useValue(googleOAuthResource)
-        .compile();
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(AppConfigService)
+      .useValue(config)
+      .overrideProvider(GoogleOAuthResource)
+      .useValue(googleOAuthResource)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     openApiDocument = configureApp(app);
@@ -148,14 +140,12 @@ describe("Auth API (e2e)", () => {
       expect.arrayContaining([
         expect.stringContaining("access_token="),
         expect.stringContaining("Max-Age=3600"),
-        expect.stringMatching(
-          /^google_oauth_state=; Path=\/; Expires=/,
-        ),
+        expect.stringMatching(/^google_oauth_state=; Path=\/; Expires=/),
       ]),
     );
-    expect(
-      googleOAuthResource.exchangeAuthorizationCode,
-    ).toHaveBeenCalledTimes(1);
+    expect(googleOAuthResource.exchangeAuthorizationCode).toHaveBeenCalledTimes(
+      1,
+    );
     expect(googleOAuthResource.getUserInfo).toHaveBeenCalledTimes(1);
 
     const accessCookie = cookiePair(
@@ -243,9 +233,7 @@ describe("Auth API (e2e)", () => {
         "http://localhost:3000/auth/failure",
       );
       expect(callback.headers["set-cookie"]).not.toEqual(
-        expect.arrayContaining([
-          expect.stringContaining("access_token="),
-        ]),
+        expect.arrayContaining([expect.stringContaining("access_token=")]),
       );
     },
   );
@@ -267,9 +255,7 @@ describe("Auth API (e2e)", () => {
     ).not.toHaveBeenCalled();
     expect(response.headers["set-cookie"]).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(
-          /^google_oauth_state=; Path=\/; Expires=/,
-        ),
+        expect.stringMatching(/^google_oauth_state=; Path=\/; Expires=/),
       ]),
     );
   });
@@ -291,9 +277,7 @@ describe("Auth API (e2e)", () => {
     expect(googleOAuthResource.getUserInfo).not.toHaveBeenCalled();
     expect(response.headers["set-cookie"]).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(
-          /^google_oauth_state=; Path=\/; Expires=/,
-        ),
+        expect.stringMatching(/^google_oauth_state=; Path=\/; Expires=/),
       ]),
     );
   });
@@ -315,9 +299,7 @@ describe("Auth API (e2e)", () => {
     ).not.toHaveBeenCalled();
     expect(response.headers["set-cookie"]).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(
-          /^google_oauth_state=; Path=\/; Expires=/,
-        ),
+        expect.stringMatching(/^google_oauth_state=; Path=\/; Expires=/),
       ]),
     );
   });
@@ -384,9 +366,7 @@ describe("Auth API (e2e)", () => {
         500: { description: "サーバーエラー" },
       },
     });
-    expect(
-      openApiDocument.paths["/auth/google/callback"]?.get,
-    ).toMatchObject({
+    expect(openApiDocument.paths["/auth/google/callback"]?.get).toMatchObject({
       tags: ["auth"],
       summary: "Google OAuth コールバック",
       description:
@@ -453,9 +433,7 @@ describe("Auth API (e2e)", () => {
       ),
     ).toBe(false);
     expect(openApiDocument.paths["/auth/refresh"]).toBeUndefined();
-    expect(
-      openApiDocument.paths["/auth/google/login"]?.post,
-    ).toBeUndefined();
+    expect(openApiDocument.paths["/auth/google/login"]?.post).toBeUndefined();
   });
 
   afterEach(async () => {

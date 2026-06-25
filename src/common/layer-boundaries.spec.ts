@@ -1,8 +1,4 @@
-import {
-  readFileSync,
-  readdirSync,
-  statSync,
-} from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "../app.module";
@@ -27,10 +23,7 @@ const typescriptFiles = (directory: string, suffix: string): string[] =>
 
 describe("layer boundaries", () => {
   it("keeps each Controller dependent on only its matching Service", () => {
-    for (const path of typescriptFiles(
-      "src/controller",
-      ".controller.ts",
-    )) {
+    for (const path of typescriptFiles("src/controller", ".controller.ts")) {
       const contents = source(path);
       const controllerName = basename(path, ".controller.ts");
       const serviceName = `${controllerName[0].toUpperCase()}${controllerName.slice(1)}Service`;
@@ -49,9 +42,9 @@ describe("layer boundaries", () => {
           `^\\s*private readonly ${controllerName}Service: ${serviceName},?\\s*$`,
         ),
       );
-      expect(
-        [...contents.matchAll(/from ["'].*\/service\/.*["']/g)],
-      ).toHaveLength(1);
+      expect([
+        ...contents.matchAll(/from ["'].*\/service\/.*["']/g),
+      ]).toHaveLength(1);
     }
   });
 
@@ -66,10 +59,7 @@ describe("layer boundaries", () => {
   });
 
   it("keeps DTO, Controller, Service, and Swagger dependencies out of Resources", () => {
-    for (const path of typescriptFiles(
-      "src/resource",
-      ".resource.ts",
-    )) {
+    for (const path of typescriptFiles("src/resource", ".resource.ts")) {
       const contents = source(path);
 
       expect(contents).not.toMatch(
@@ -151,12 +141,8 @@ describe("layer boundaries", () => {
       "docs/bff-code-design-rules.md",
       "docs/swagger-openapi-rules.md",
       "docs/ai-api-harness.md",
-      ...filesBelow(".codex/agents").filter((path) =>
-        path.endsWith(".toml"),
-      ),
-      ...filesBelow(".codex/workflows").filter((path) =>
-        path.endsWith(".md"),
-      ),
+      ...filesBelow(".codex/agents").filter((path) => path.endsWith(".toml")),
+      ...filesBelow(".codex/workflows").filter((path) => path.endsWith(".md")),
     ];
 
     for (const path of paths) {

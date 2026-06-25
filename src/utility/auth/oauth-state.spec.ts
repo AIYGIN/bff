@@ -1,8 +1,5 @@
 import { createHmac } from "node:crypto";
-import {
-  createOAuthState,
-  verifyOAuthState,
-} from "./oauth-state";
+import { createOAuthState, verifyOAuthState } from "./oauth-state";
 
 describe("OAuth state utilities", () => {
   const signingSecret = Buffer.alloc(32, 1).toString("base64url");
@@ -61,9 +58,9 @@ describe("OAuth state utilities", () => {
     ["malformed value", "not-compact", "state"],
     ["tampered signature", "e30.invalid", "state"],
   ])("rejects %s", (_name, cookieValue, state) => {
-    expect(() =>
-      verifyOAuthState(cookieValue, state, config),
-    ).toThrow("Invalid OAuth state");
+    expect(() => verifyOAuthState(cookieValue, state, config)).toThrow(
+      "Invalid OAuth state",
+    );
   });
 
   it("rejects a state mismatch", () => {
@@ -127,11 +124,7 @@ describe("OAuth state utilities", () => {
     jest.useFakeTimers().setSystemTime(new Date("2026-01-01T00:00:00Z"));
     try {
       expect(() =>
-        verifyOAuthState(
-          signedCookie(payload),
-          "A".repeat(43),
-          config,
-        ),
+        verifyOAuthState(signedCookie(payload), "A".repeat(43), config),
       ).toThrow("Invalid OAuth state");
     } finally {
       jest.useRealTimers();

@@ -34,10 +34,7 @@ export class TodoService {
   }
 
   async deleteTodo(id: string, ownerUserId: string): Promise<void> {
-    const deleted = await this.todoResource.deleteByIdForOwner(
-      id,
-      ownerUserId,
-    );
+    const deleted = await this.todoResource.deleteByIdForOwner(id, ownerUserId);
     if (!deleted) {
       throw new NotFoundException("TODOが見つかりません");
     }

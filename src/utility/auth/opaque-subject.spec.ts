@@ -4,16 +4,8 @@ describe("deriveOpaqueSubject", () => {
   const secret = Buffer.alloc(32, 3).toString("base64url");
 
   it("derives a stable opaque subject without exposing Provider ID", () => {
-    const first = deriveOpaqueSubject(
-      "google",
-      "google-user-123",
-      secret,
-    );
-    const second = deriveOpaqueSubject(
-      "google",
-      "google-user-123",
-      secret,
-    );
+    const first = deriveOpaqueSubject("google", "google-user-123", secret);
+    const second = deriveOpaqueSubject("google", "google-user-123", secret);
 
     expect(first).toBe(second);
     expect(first).toMatch(/^usr_v1_[A-Za-z0-9_-]{43}$/);

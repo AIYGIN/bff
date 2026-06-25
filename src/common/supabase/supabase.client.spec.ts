@@ -39,9 +39,7 @@ describe("createSupabaseClient", () => {
     } as AppConfigService);
 
     expect(createClient).not.toHaveBeenCalled();
-    expect(() => client.from("todos")).toThrow(
-      "Supabase is not configured",
-    );
+    expect(() => client.from("todos")).toThrow("Supabase is not configured");
   });
 
   it("fails when Supabase env is missing in production", () => {

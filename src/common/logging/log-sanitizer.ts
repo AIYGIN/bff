@@ -43,10 +43,7 @@ const isSensitiveKey = (key: string): boolean => {
   );
 };
 
-const readProperty = (
-  value: Record<string, unknown>,
-  key: string,
-): unknown => {
+const readProperty = (value: Record<string, unknown>, key: string): unknown => {
   try {
     return value[key];
   } catch {
@@ -161,12 +158,14 @@ export const sanitizeLogValue = (
       const record = current as Record<string, unknown>;
       const keys = Object.keys(record);
       const sanitized = Object.fromEntries(
-        keys.slice(0, maxEntries).map((key) => [
-          key,
-          isSensitiveKey(key)
-            ? REDACTED_LOG_VALUE
-            : sanitize(readProperty(record, key), depth + 1),
-        ]),
+        keys
+          .slice(0, maxEntries)
+          .map((key) => [
+            key,
+            isSensitiveKey(key)
+              ? REDACTED_LOG_VALUE
+              : sanitize(readProperty(record, key), depth + 1),
+          ]),
       );
       if (keys.length > maxEntries) {
         sanitized._truncated = TRUNCATED_LOG_VALUE;

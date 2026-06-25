@@ -1,7 +1,4 @@
-import {
-  REDACTED_LOG_VALUE,
-  sanitizeLogValue,
-} from "./log-sanitizer";
+import { REDACTED_LOG_VALUE, sanitizeLogValue } from "./log-sanitizer";
 
 describe("sanitizeLogValue", () => {
   it("redacts sensitive keys without over-redacting safe names", () => {
@@ -122,15 +119,18 @@ describe("sanitizeLogValue", () => {
 
   it("limits excessive depth", () => {
     expect(
-      sanitizeLogValue({
-        one: {
-          two: {
-            three: {
-              four: "value",
+      sanitizeLogValue(
+        {
+          one: {
+            two: {
+              three: {
+                four: "value",
+              },
             },
           },
         },
-      }, { maxDepth: 2 }),
+        { maxDepth: 2 },
+      ),
     ).toEqual({
       one: {
         two: "[MaxDepth]",

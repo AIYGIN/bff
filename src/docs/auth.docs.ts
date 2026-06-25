@@ -58,7 +58,8 @@ export const GoogleCallbackDocs = () =>
     }),
     ApiQuery({
       name: "code",
-      description: "成功時に指定する Google authorization code。error と同時指定不可。",
+      description:
+        "成功時に指定する Google authorization code。error と同時指定不可。",
       required: false,
       type: String,
     }),

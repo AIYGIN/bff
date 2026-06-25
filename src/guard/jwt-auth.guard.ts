@@ -18,19 +18,14 @@ export class JwtAuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request =
-      context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const token = readCookie(
-      request.headers?.cookie,
-      "access_token",
-    );
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const token = readCookie(request.headers?.cookie, "access_token");
     if (!token) {
       throw new UnauthorizedException("Unauthorized");
     }
 
     try {
-      request.currentUser =
-        await this.authService.verifyAccessToken(token);
+      request.currentUser = await this.authService.verifyAccessToken(token);
       return true;
     } catch {
       throw new UnauthorizedException("Unauthorized");

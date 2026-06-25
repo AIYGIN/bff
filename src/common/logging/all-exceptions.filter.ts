@@ -63,11 +63,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
             message: "Internal server error",
           };
-    this.httpAdapterHost.httpAdapter.reply(
-      response,
-      responseBody,
-      status,
-    );
+    this.httpAdapterHost.httpAdapter.reply(response, responseBody, status);
   }
 
   private httpExceptionResponse(

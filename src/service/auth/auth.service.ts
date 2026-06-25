@@ -52,10 +52,7 @@ export type HandleGoogleCallbackResult =
       redirectUrl: string;
     };
 
-const requiredRedirect = (
-  key: string,
-  value: string | null,
-): string => {
+const requiredRedirect = (key: string, value: string | null): string => {
   if (value === null) {
     throw new AuthConfigurationException(key);
   }
@@ -100,13 +97,12 @@ export class AuthService {
       ),
       ttlSeconds: this.config.oauthStateTtlSeconds,
     });
-    const authorization =
-      this.googleOAuthResource.buildAuthorizationUrl(
-        new GoogleAuthorizationEntityRequest({
-          state: state.state,
-          codeChallenge: state.codeChallenge,
-        }),
-      );
+    const authorization = this.googleOAuthResource.buildAuthorizationUrl(
+      new GoogleAuthorizationEntityRequest({
+        state: state.state,
+        codeChallenge: state.codeChallenge,
+      }),
+    );
 
     return {
       authorizationUrl: authorization.authorizationUrl,
@@ -152,13 +148,12 @@ export class AuthService {
     }
 
     try {
-      const token =
-        await this.googleOAuthResource.exchangeAuthorizationCode(
-          new GoogleTokenExchangeEntityRequest({
-            code: request.code ?? "",
-            codeVerifier: state.codeVerifier,
-          }),
-        );
+      const token = await this.googleOAuthResource.exchangeAuthorizationCode(
+        new GoogleTokenExchangeEntityRequest({
+          code: request.code ?? "",
+          codeVerifier: state.codeVerifier,
+        }),
+      );
       const userInfo = await this.googleOAuthResource.getUserInfo(
         new GoogleUserInfoEntityRequest({
           accessToken: token.accessToken,
@@ -243,10 +238,7 @@ export class AuthService {
       ),
       ttlSeconds: this.config.jwtAccessTtlSeconds,
       issuer: this.requiredConfig("JWT_ISSUER", this.config.jwtIssuer),
-      audience: this.requiredConfig(
-        "JWT_AUDIENCE",
-        this.config.jwtAudience,
-      ),
+      audience: this.requiredConfig("JWT_AUDIENCE", this.config.jwtAudience),
     };
   }
 

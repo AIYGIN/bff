@@ -97,10 +97,7 @@ export class TodoResource {
     return data;
   }
 
-  async deleteByIdForOwner(
-    id: string,
-    ownerUserId: string,
-  ): Promise<boolean> {
+  async deleteByIdForOwner(id: string, ownerUserId: string): Promise<boolean> {
     const { data, error } = await this.supabase
       .from("todos")
       .delete()

@@ -77,8 +77,7 @@ describe("Portfolio analysis (e2e)", () => {
 
     expect(operation).toMatchObject({
       tags: ["Portfolio"],
-      summary:
-        "holdings と限定商品マスタからポートフォリオ分析を取得する",
+      summary: "holdings と限定商品マスタからポートフォリオ分析を取得する",
       responses: {
         "200": {
           description: "ポートフォリオ分析結果の取得に成功しました",

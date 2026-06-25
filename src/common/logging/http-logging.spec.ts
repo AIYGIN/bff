@@ -2,9 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { createHttpLoggerOptions } from "./http-logging";
 
 describe("createHttpLoggerOptions", () => {
-  const createRequest = (
-    requestId?: string,
-  ): IncomingMessage =>
+  const createRequest = (requestId?: string): IncomingMessage =>
     ({
       headers: {
         "x-request-id": requestId,
@@ -38,10 +36,7 @@ describe("createHttpLoggerOptions", () => {
     const options = createHttpLoggerOptions("debug");
     const response = createResponse();
 
-    const id = options.genReqId?.(
-      createRequest("unsafe request id"),
-      response,
-    );
+    const id = options.genReqId?.(createRequest("unsafe request id"), response);
 
     expect(id).toEqual(expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
@@ -50,10 +45,7 @@ describe("createHttpLoggerOptions", () => {
     const options = createHttpLoggerOptions("debug");
 
     expect(
-      options.genReqId?.(
-        createRequest("a".repeat(129)),
-        createResponse(),
-      ),
+      options.genReqId?.(createRequest("a".repeat(129)), createResponse()),
     ).toEqual(expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
 
@@ -66,10 +58,7 @@ describe("createHttpLoggerOptions", () => {
   ])("maps status %i to %s", (status, expectedLevel) => {
     const options = createHttpLoggerOptions("debug");
     expect(
-      options.customLogLevel?.(
-        createRequest(),
-        createResponse(status),
-      ),
+      options.customLogLevel?.(createRequest(), createResponse(status)),
     ).toBe(expectedLevel);
   });
 
@@ -79,11 +68,10 @@ describe("createHttpLoggerOptions", () => {
     request.id = "request-123";
 
     expect(
-      options.customSuccessObject?.(
-        request,
-        createResponse(),
-        { responseTime: 12, req: { body: "secret" } },
-      ),
+      options.customSuccessObject?.(request, createResponse(), {
+        responseTime: 12,
+        req: { body: "secret" },
+      }),
     ).toEqual({
       event: "http.request.completed",
       requestId: "request-123",
@@ -102,11 +90,9 @@ describe("createHttpLoggerOptions", () => {
     request.id = "request-123";
     request.headers["user-agent"] = "a".repeat(600);
 
-    const value = options.customSuccessObject?.(
-      request,
-      createResponse(),
-      { responseTime: 12 },
-    ) as { userAgent?: string };
+    const value = options.customSuccessObject?.(request, createResponse(), {
+      responseTime: 12,
+    }) as { userAgent?: string };
 
     expect(value.userAgent).toHaveLength(512);
   });

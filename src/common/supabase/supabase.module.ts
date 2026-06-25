@@ -1,9 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AppConfigService } from "../config/app-config.service";
-import {
-  createSupabaseClient,
-  SUPABASE_CLIENT,
-} from "./supabase.client";
+import { createSupabaseClient, SUPABASE_CLIENT } from "./supabase.client";
 
 @Module({
   providers: [

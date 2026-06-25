@@ -14,8 +14,7 @@ describe("GoogleOAuthResource", () => {
   const config = {
     googleOAuthClientId: "google-client",
     googleOAuthClientSecret: "google-secret",
-    googleOAuthRedirectUri:
-      "https://bff.example.com/auth/google/callback",
+    googleOAuthRedirectUri: "https://bff.example.com/auth/google/callback",
     googleOAuthTimeoutMs: 5000,
   } as AppConfigService;
   const contextLogger: ContextLogger = {

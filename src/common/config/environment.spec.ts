@@ -5,12 +5,9 @@ describe("validateEnvironment", () => {
     NODE_ENV: "production",
     GOOGLE_OAUTH_CLIENT_ID: "google-client",
     GOOGLE_OAUTH_CLIENT_SECRET: "google-secret",
-    GOOGLE_OAUTH_REDIRECT_URI:
-      "https://bff.example.com/auth/google/callback",
-    AUTH_SUCCESS_REDIRECT_URL:
-      "https://frontend.example.com/auth/success",
-    AUTH_FAILURE_REDIRECT_URL:
-      "https://frontend.example.com/auth/failure",
+    GOOGLE_OAUTH_REDIRECT_URI: "https://bff.example.com/auth/google/callback",
+    AUTH_SUCCESS_REDIRECT_URL: "https://frontend.example.com/auth/success",
+    AUTH_FAILURE_REDIRECT_URL: "https://frontend.example.com/auth/failure",
     OAUTH_STATE_SIGNING_SECRET: Buffer.alloc(32, 1).toString("base64url"),
     JWT_ACCESS_SECRET: Buffer.alloc(32, 2).toString("base64url"),
     JWT_ISSUER: "bff",
@@ -60,19 +57,13 @@ describe("validateEnvironment", () => {
     ).toEqual({
       NODE_ENV: "production",
       PORT: 8080,
-      CORS_ORIGINS: [
-        "https://app.example.com",
-        "https://admin.example.com",
-      ],
+      CORS_ORIGINS: ["https://app.example.com", "https://admin.example.com"],
       LOG_LEVEL: "warn",
       GOOGLE_OAUTH_CLIENT_ID: "google-client",
       GOOGLE_OAUTH_CLIENT_SECRET: "google-secret",
-      GOOGLE_OAUTH_REDIRECT_URI:
-        "https://bff.example.com/auth/google/callback",
-      AUTH_SUCCESS_REDIRECT_URL:
-        "https://frontend.example.com/auth/success",
-      AUTH_FAILURE_REDIRECT_URL:
-        "https://frontend.example.com/auth/failure",
+      GOOGLE_OAUTH_REDIRECT_URI: "https://bff.example.com/auth/google/callback",
+      AUTH_SUCCESS_REDIRECT_URL: "https://frontend.example.com/auth/success",
+      AUTH_FAILURE_REDIRECT_URL: "https://frontend.example.com/auth/failure",
       OAUTH_STATE_SIGNING_SECRET:
         productionAuthEnvironment.OAUTH_STATE_SIGNING_SECRET,
       OAUTH_STATE_TTL_SECONDS: 601,
@@ -94,10 +85,7 @@ describe("validateEnvironment", () => {
         CORS_ORIGIN:
           "https://app.example.com/,https://app.example.com,http://localhost:3000",
       }).CORS_ORIGINS,
-    ).toEqual([
-      "https://app.example.com",
-      "http://localhost:3000",
-    ]);
+    ).toEqual(["https://app.example.com", "http://localhost:3000"]);
   });
 
   it.each([
@@ -119,10 +107,7 @@ describe("validateEnvironment", () => {
     [{ GOOGLE_OAUTH_TIMEOUT_MS: "999" }, "GOOGLE_OAUTH_TIMEOUT_MS"],
     [{ GOOGLE_OAUTH_TIMEOUT_MS: "10001" }, "GOOGLE_OAUTH_TIMEOUT_MS"],
     [{ SUPABASE_URL: "not-a-url" }, "SUPABASE_URL"],
-    [
-      { SUPABASE_URL: "https://user:pass@project.supabase.co" },
-      "SUPABASE_URL",
-    ],
+    [{ SUPABASE_URL: "https://user:pass@project.supabase.co" }, "SUPABASE_URL"],
     [
       { SUPABASE_URL: "https://project.supabase.co?token=secret" },
       "SUPABASE_URL",
@@ -160,17 +145,16 @@ describe("validateEnvironment", () => {
   });
 
   it("uses info as the production log level default", () => {
-    expect(
-      validateEnvironment(productionAuthEnvironment).LOG_LEVEL,
-    ).toBe("info");
+    expect(validateEnvironment(productionAuthEnvironment).LOG_LEVEL).toBe(
+      "info",
+    );
   });
 
   it("requires HTTPS redirect URLs in production", () => {
     expect(() =>
       validateEnvironment({
         ...productionAuthEnvironment,
-        AUTH_SUCCESS_REDIRECT_URL:
-          "http://frontend.example.com/auth/success",
+        AUTH_SUCCESS_REDIRECT_URL: "http://frontend.example.com/auth/success",
       }),
     ).toThrow("AUTH_SUCCESS_REDIRECT_URL");
   });
@@ -178,9 +162,7 @@ describe("validateEnvironment", () => {
   it("rejects reuse of cryptographic secrets", () => {
     expect(() =>
       validateEnvironment({
-        OAUTH_STATE_SIGNING_SECRET: Buffer.alloc(32, 1).toString(
-          "base64url",
-        ),
+        OAUTH_STATE_SIGNING_SECRET: Buffer.alloc(32, 1).toString("base64url"),
         JWT_ACCESS_SECRET: Buffer.alloc(32, 1).toString("base64url"),
       }),
     ).toThrow("must be different");
@@ -199,14 +181,8 @@ describe("validateEnvironment", () => {
   });
 
   it.each([
-    [
-      "OAUTH_STATE_SIGNING_SECRET",
-      "JWT_ACCESS_SECRET",
-    ],
-    [
-      "OAUTH_STATE_SIGNING_SECRET",
-      "SUBJECT_DERIVATION_SECRET",
-    ],
+    ["OAUTH_STATE_SIGNING_SECRET", "JWT_ACCESS_SECRET"],
+    ["OAUTH_STATE_SIGNING_SECRET", "SUBJECT_DERIVATION_SECRET"],
     ["JWT_ACCESS_SECRET", "SUBJECT_DERIVATION_SECRET"],
   ])("rejects reuse between %s and %s", (first, second) => {
     const secret = Buffer.alloc(32, 9).toString("base64url");
@@ -236,10 +212,7 @@ describe("validateEnvironment", () => {
       "AUTH_SUCCESS_REDIRECT_URL",
       "https://user:password@frontend.example.com/auth/success",
     ],
-    [
-      "AUTH_FAILURE_REDIRECT_URL",
-      "ftp://frontend.example.com/auth/failure",
-    ],
+    ["AUTH_FAILURE_REDIRECT_URL", "ftp://frontend.example.com/auth/failure"],
   ])("rejects unsafe Auth URL %s", (key, value) => {
     expect(() => validateEnvironment({ [key]: value })).toThrow(key);
   });

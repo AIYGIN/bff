@@ -1,7 +1,4 @@
-import {
-  type INestApplication,
-  ValidationPipe,
-} from "@nestjs/common";
+import { type INestApplication, ValidationPipe } from "@nestjs/common";
 import {
   DocumentBuilder,
   type OpenAPIObject,
@@ -9,9 +6,7 @@ import {
 } from "@nestjs/swagger";
 import { AppConfigService } from "./common/config/app-config.service";
 
-export const configureApp = (
-  app: INestApplication,
-): OpenAPIObject => {
+export const configureApp = (app: INestApplication): OpenAPIObject => {
   const appConfig = app.get(AppConfigService);
 
   app.useGlobalPipes(

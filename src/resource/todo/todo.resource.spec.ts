@@ -156,9 +156,9 @@ describe("TodoResource", () => {
     });
     const resource = createResource(chain);
 
-    await expect(
-      resource.create({ ownerUserId, title: "" }),
-    ).rejects.toThrow(BadRequestException);
+    await expect(resource.create({ ownerUserId, title: "" })).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it("maps unexpected Supabase errors to generic InternalServerError", async () => {

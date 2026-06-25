@@ -1,8 +1,4 @@
-export const APP_ENVIRONMENTS = [
-  "development",
-  "test",
-  "production",
-] as const;
+export const APP_ENVIRONMENTS = ["development", "test", "production"] as const;
 export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];
 
 export const LOG_LEVELS = [
@@ -80,10 +76,7 @@ const parseCorsOrigin = (value: string): string => {
   return url.origin;
 };
 
-const parseOptionalNonEmpty = (
-  key: string,
-  value: unknown,
-): string | null => {
+const parseOptionalNonEmpty = (key: string, value: unknown): string | null => {
   if (value === undefined || value === null || value === "") {
     return null;
   }
@@ -105,15 +98,10 @@ const parseInteger = (
   const parsed =
     typeof rawValue === "number"
       ? rawValue
-      : typeof rawValue === "string" &&
-          /^[0-9]+$/.test(rawValue.trim())
+      : typeof rawValue === "string" && /^[0-9]+$/.test(rawValue.trim())
         ? Number(rawValue)
         : Number.NaN;
-  if (
-    !Number.isInteger(parsed) ||
-    parsed < minimum ||
-    parsed > maximum
-  ) {
+  if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
     throw new Error(
       `${key} must be an integer between ${minimum} and ${maximum}`,
     );
@@ -146,10 +134,7 @@ const parseOptionalUrl = (
   return url.toString();
 };
 
-const parseOptionalSecret = (
-  key: string,
-  value: unknown,
-): string | null => {
+const parseOptionalSecret = (key: string, value: unknown): string | null => {
   const secret = parseOptionalNonEmpty(key, value);
   if (secret === null) {
     return null;
@@ -158,10 +143,7 @@ const parseOptionalSecret = (
     throw new Error(`${key} must be base64url without padding`);
   }
   const decoded = Buffer.from(secret, "base64url");
-  if (
-    decoded.length < 32 ||
-    decoded.toString("base64url") !== secret
-  ) {
+  if (decoded.length < 32 || decoded.toString("base64url") !== secret) {
     throw new Error(`${key} must decode to at least 32 bytes`);
   }
 
@@ -183,9 +165,7 @@ export const validateEnvironment = (
 ): EnvironmentVariables => {
   const rawNodeEnv = environment.NODE_ENV ?? "development";
   if (!isOneOf(rawNodeEnv, APP_ENVIRONMENTS)) {
-    throw new Error(
-      `NODE_ENV must be one of: ${APP_ENVIRONMENTS.join(", ")}`,
-    );
+    throw new Error(`NODE_ENV must be one of: ${APP_ENVIRONMENTS.join(", ")}`);
   }
 
   const rawPort = environment.PORT ?? 3001;
@@ -269,10 +249,7 @@ export const validateEnvironment = (
     300,
     3600,
   );
-  const jwtIssuer = parseOptionalNonEmpty(
-    "JWT_ISSUER",
-    environment.JWT_ISSUER,
-  );
+  const jwtIssuer = parseOptionalNonEmpty("JWT_ISSUER", environment.JWT_ISSUER);
   const jwtAudience = parseOptionalNonEmpty(
     "JWT_AUDIENCE",
     environment.JWT_AUDIENCE,

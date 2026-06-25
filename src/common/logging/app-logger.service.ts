@@ -33,9 +33,7 @@ const sanitizedLogFields = (fields: LogFields): LogFields => {
   }
 
   return Object.fromEntries(
-    Object.entries(sanitized).filter(
-      ([key]) => !RESERVED_LOG_FIELDS.has(key),
-    ),
+    Object.entries(sanitized).filter(([key]) => !RESERVED_LOG_FIELDS.has(key)),
   );
 };
 
@@ -50,8 +48,7 @@ export class AppLogger {
       fields: LogFields = {},
     ): void => {
       const error = message instanceof Error ? message : undefined;
-      const text =
-        typeof message === "string" ? message : message.message;
+      const text = typeof message === "string" ? message : message.message;
       const serializedFields = sanitizedLogFields(fields);
       const bindings = {
         ...serializedFields,

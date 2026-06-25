@@ -35,10 +35,7 @@ interface GoogleUserInfoResponse {
   picture?: unknown;
 }
 
-const requiredConfig = (
-  key: string,
-  value: string | null,
-): string => {
+const requiredConfig = (key: string, value: string | null): string => {
   if (value === null) {
     throw new AuthConfigurationException(key);
   }
@@ -46,9 +43,7 @@ const requiredConfig = (
 };
 
 const nonEmptyString = (value: unknown): string | null =>
-  typeof value === "string" && value.trim() !== ""
-    ? value.trim()
-    : null;
+  typeof value === "string" && value.trim() !== "" ? value.trim() : null;
 
 const optionalHttpUrl = (value: unknown): string | undefined => {
   if (value === undefined || value === null) {
@@ -150,11 +145,7 @@ export class GoogleOAuthResource {
         ),
       );
       const data = response.data;
-      if (
-        data === null ||
-        typeof data !== "object" ||
-        Array.isArray(data)
-      ) {
+      if (data === null || typeof data !== "object" || Array.isArray(data)) {
         throw new GoogleOAuthRejectedException();
       }
       const accessToken = nonEmptyString(data.access_token);
@@ -189,11 +180,7 @@ export class GoogleOAuthResource {
         ),
       );
       const data = response.data;
-      if (
-        data === null ||
-        typeof data !== "object" ||
-        Array.isArray(data)
-      ) {
+      if (data === null || typeof data !== "object" || Array.isArray(data)) {
         throw new GoogleOAuthRejectedException();
       }
       const providerUserId = nonEmptyString(data.sub);

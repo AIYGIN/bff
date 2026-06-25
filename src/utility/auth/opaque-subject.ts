@@ -6,10 +6,7 @@ const decodeSecret = (secret: string): Buffer => {
   }
   const decoded = Buffer.from(secret, "base64url");
 
-  if (
-    decoded.length < 32 ||
-    decoded.toString("base64url") !== secret
-  ) {
+  if (decoded.length < 32 || decoded.toString("base64url") !== secret) {
     throw new Error("Invalid subject derivation secret");
   }
   return decoded;

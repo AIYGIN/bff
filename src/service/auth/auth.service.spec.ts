@@ -19,10 +19,8 @@ describe("AuthService", () => {
       verifyAsync: jest.fn(),
     } as unknown as jest.Mocked<JwtService>;
     const config = {
-      authFailureRedirectUrl:
-        "https://frontend.example.com/auth/failure",
-      authSuccessRedirectUrl:
-        "https://frontend.example.com/auth/success",
+      authFailureRedirectUrl: "https://frontend.example.com/auth/failure",
+      authSuccessRedirectUrl: "https://frontend.example.com/auth/success",
       jwtAccessSecret: Buffer.alloc(32, 2).toString("base64url"),
       jwtAccessTtlSeconds: 3600,
       jwtAudience: "frontend",
@@ -37,11 +35,7 @@ describe("AuthService", () => {
       config,
       googleOAuthResource,
       jwtService,
-      service: new AuthService(
-        googleOAuthResource,
-        jwtService,
-        config,
-      ),
+      service: new AuthService(googleOAuthResource, jwtService, config),
     };
   };
 
@@ -61,9 +55,7 @@ describe("AuthService", () => {
       authorizationUrl: "https://accounts.google.com/auth",
       stateCookieValue: expect.any(String),
     });
-    expect(
-      googleOAuthResource.buildAuthorizationUrl,
-    ).toHaveBeenCalledWith(
+    expect(googleOAuthResource.buildAuthorizationUrl).toHaveBeenCalledWith(
       expect.objectContaining({
         state: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
         codeChallenge: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
@@ -107,12 +99,8 @@ describe("AuthService", () => {
   });
 
   it("exchanges code, loads UserInfo, derives subject, and signs JWT", async () => {
-    const {
-      config,
-      googleOAuthResource,
-      jwtService,
-      service,
-    } = createService();
+    const { config, googleOAuthResource, jwtService, service } =
+      createService();
     const state = callbackState(config);
     googleOAuthResource.exchangeAuthorizationCode.mockResolvedValue({
       accessToken: "google-token",
@@ -132,9 +120,7 @@ describe("AuthService", () => {
       accessToken: "bff-jwt",
       redirectUrl: "https://frontend.example.com/auth/success",
     });
-    expect(
-      googleOAuthResource.exchangeAuthorizationCode,
-    ).toHaveBeenCalledWith(
+    expect(googleOAuthResource.exchangeAuthorizationCode).toHaveBeenCalledWith(
       expect.objectContaining({
         code: "code",
         codeVerifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
@@ -153,16 +139,11 @@ describe("AuthService", () => {
       }),
     );
     expect(
-      googleOAuthResource.exchangeAuthorizationCode.mock
-        .invocationCallOrder[0],
-    ).toBeLessThan(
-      googleOAuthResource.getUserInfo.mock.invocationCallOrder[0],
-    );
+      googleOAuthResource.exchangeAuthorizationCode.mock.invocationCallOrder[0],
+    ).toBeLessThan(googleOAuthResource.getUserInfo.mock.invocationCallOrder[0]);
     expect(
       googleOAuthResource.getUserInfo.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      jwtService.signAsync.mock.invocationCallOrder[0],
-    );
+    ).toBeLessThan(jwtService.signAsync.mock.invocationCallOrder[0]);
   });
 
   it.each([
@@ -175,12 +156,8 @@ describe("AuthService", () => {
       { providerUserId: "google-user", displayName: "" },
     ],
   ])("maps %s to authentication failure", async (_name, userInfo) => {
-    const {
-      config,
-      googleOAuthResource,
-      jwtService,
-      service,
-    } = createService();
+    const { config, googleOAuthResource, jwtService, service } =
+      createService();
     const state = callbackState(config);
     googleOAuthResource.exchangeAuthorizationCode.mockResolvedValue({
       accessToken: "google-token",
@@ -202,20 +179,23 @@ describe("AuthService", () => {
   it.each([
     ["blank code", { code: " ", state: "state" }],
     ["blank error", { error: " ", state: "state" }],
-  ])("rejects %s before state or Provider processing", async (_name, request) => {
-    const { googleOAuthResource, service } = createService();
+  ])(
+    "rejects %s before state or Provider processing",
+    async (_name, request) => {
+      const { googleOAuthResource, service } = createService();
 
-    await expect(
-      service.handleGoogleCallback({
-        ...request,
-        cookieHeader: "google_oauth_state=signed",
-      }),
-    ).rejects.toBeInstanceOf(BadRequestException);
-    expect(
-      googleOAuthResource.exchangeAuthorizationCode,
-    ).not.toHaveBeenCalled();
-    expect(googleOAuthResource.getUserInfo).not.toHaveBeenCalled();
-  });
+      await expect(
+        service.handleGoogleCallback({
+          ...request,
+          cookieHeader: "google_oauth_state=signed",
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(
+        googleOAuthResource.exchangeAuthorizationCode,
+      ).not.toHaveBeenCalled();
+      expect(googleOAuthResource.getUserInfo).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     new GoogleOAuthRejectedException(),

@@ -1,13 +1,5 @@
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-} from "@nestjs/swagger";
-import {
-  IsDefined,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsDefined, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class GoogleCallbackQueryDto {
   @ApiPropertyOptional({

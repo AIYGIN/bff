@@ -96,9 +96,7 @@ describe("TodoController", () => {
 
     await expect(
       controller.getTodo("11111111-1111-1111-1111-111111111111", currentUser),
-    ).resolves.toBe(
-      response,
-    );
+    ).resolves.toBe(response);
     expect(todoService.getTodo).toHaveBeenCalledWith(
       "11111111-1111-1111-1111-111111111111",
       currentUser.subject,
@@ -109,7 +107,10 @@ describe("TodoController", () => {
     todoService.deleteTodo.mockResolvedValue(undefined);
 
     await expect(
-      controller.deleteTodo("11111111-1111-1111-1111-111111111111", currentUser),
+      controller.deleteTodo(
+        "11111111-1111-1111-1111-111111111111",
+        currentUser,
+      ),
     ).resolves.toBeUndefined();
     expect(todoService.deleteTodo).toHaveBeenCalledWith(
       "11111111-1111-1111-1111-111111111111",
@@ -170,7 +171,11 @@ describe("TodoController", () => {
       todoService.updateTodo.mockResolvedValue(response);
 
       await expect(
-        controller.updateTodo("22222222-2222-2222-2222-222222222222", request, currentUser),
+        controller.updateTodo(
+          "22222222-2222-2222-2222-222222222222",
+          request,
+          currentUser,
+        ),
       ).resolves.toBe(response);
       expect(todoService.updateTodo).toHaveBeenCalledWith(
         "22222222-2222-2222-2222-222222222222",

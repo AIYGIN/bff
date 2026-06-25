@@ -50,17 +50,13 @@ export const createHttpLoggerOptions = (
   hooks: {
     logMethod(args, method) {
       const sanitizedArgs = args.map((arg) =>
-        arg !== null && typeof arg === "object"
-          ? sanitizeLogValue(arg)
-          : arg,
+        arg !== null && typeof arg === "object" ? sanitizeLogValue(arg) : arg,
       );
       method.apply(this, sanitizedArgs);
     },
   },
   genReqId: (request, response): ReqId => {
-    const incomingRequestId = firstHeaderValue(
-      request.headers["x-request-id"],
-    );
+    const incomingRequestId = firstHeaderValue(request.headers["x-request-id"]);
     const id =
       incomingRequestId && REQUEST_ID_PATTERN.test(incomingRequestId)
         ? incomingRequestId

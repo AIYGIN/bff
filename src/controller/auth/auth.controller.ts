@@ -90,9 +90,7 @@ export class AuthController {
   @Get("me")
   @UseGuards(JwtAuthGuard)
   @GetAuthMeDocs()
-  getMe(
-    @CurrentUserDecorator() currentUser: CurrentUser,
-  ): AuthMeResponseDto {
+  getMe(@CurrentUserDecorator() currentUser: CurrentUser): AuthMeResponseDto {
     return this.authService.getMe(currentUser);
   }
 
@@ -100,9 +98,6 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @LogoutDocs()
   logout(@Res({ passthrough: true }) response: Response): void {
-    response.clearCookie(
-      "access_token",
-      this.authService.cookieClearOptions(),
-    );
+    response.clearCookie("access_token", this.authService.cookieClearOptions());
   }
 }
