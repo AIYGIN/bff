@@ -29,6 +29,12 @@ TDD フロー:
 3. mock_reviewer: BFF ルール、Swagger ルール、Issue IF との一致を確認する。
 
 完了条件:
+- mock_tester / mock_implementer / mock_reviewer のどこまで完了したかを最終報告に明記する。
+- mock_reviewer が未完了の場合、Controller mock PR 作成完了とは扱わない。
+- 親エージェントが同じ mock 実装を並行して進めることを前提にしない。親側の重複実装は token 浪費と差分衝突の原因なので禁止。
+- 長時間 running のまま完了しない場合でも、親エージェントはユーザー確認なしに close/shutdown しない。
+- close/shutdown を相談する時は、待機時間、最後に観測できた状態、終了しない理由として断定できる事実、不明点、継続/停止/親側引き継ぎの選択肢をユーザーへ説明する。
+- `previous_status: "running"` の agent を閉じた場合、終了理由は「親が close_agent したため」と報告する。サブエージェント内部エラーと断定しない。
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm test --runInBand`

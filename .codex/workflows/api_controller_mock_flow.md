@@ -10,6 +10,14 @@ NestJS BFF の API 追加は、Issue Driven + Test Driven Development で進め�
 
 ## 基本原則
 
+- mock flow は `mock_tester -> mock_implementer -> mock_reviewer` の順に進める。途中工程を省略した場合は完了扱いにしない。
+- mock_reviewer のレビューが未実施の場合、テストが通っていても「レビュー未完了」と明記する。
+- サブエージェントに委譲した作業と同じ Controller mock 実装を親エージェントが並行して進めない。重複作業は token 浪費と差分衝突の原因になる。
+- サブエージェントが長時間 running のまま完了しない場合でも、ユーザー確認なしに close/shutdown しない。
+- close/shutdown を検討する時は、待機時間、最後に観測できた状態、終了しない理由として断定できる事実、不明点、継続/停止/親側引き継ぎの選択肢をユーザーへ説明する。
+- `previous_status: "running"` の agent を閉じた場合、終了理由は「親が close_agent したため」であり、サブエージェント内部エラーと断定しない。
+- 単純な Controller mock では丸投げを避け、Issue 要約、テスト作成、実装、レビューのように小さく具体的な依頼へ分ける。
+
 - PM が API IF を決め、Issue にする。
 - 人間が Issue コメントで IF を補足・修正する。
 - エージェントは Issue 本文と最新コメントをもとに Controller mock を作る。
