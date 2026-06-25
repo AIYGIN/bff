@@ -694,12 +694,13 @@ describe("Users API (e2e)", () => {
     const document = response.body as OpenAPIObject;
 
     expect(Object.keys(document.paths)).toEqual([
-      "/todos",
-      "/todos/{id}",
+      "/portfolio/holdings",
       "/auth/google/login",
       "/auth/google/callback",
       "/auth/me",
       "/auth/logout",
+      "/todos",
+      "/todos/{id}",
     ]);
     expect(document.paths["/todos"]).toBeDefined();
     expect(document.paths["/todos"]?.get?.tags).toEqual(["todos"]);
