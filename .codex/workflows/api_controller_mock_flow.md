@@ -85,7 +85,7 @@ NestJS BFF の API 追加は、Issue Driven + Test Driven Development で進め�
 ## Context Packet handoff
 
 親エージェントは `mock_tester`、`mock_implementer`、`mock_reviewer` を起動する前に
-`docs/ai-api-harness.md` の Context Packet を作成する。
+`docs/agent-context-packet.md` の Context Packet を作成する。
 
 - `Confirmed Requirements` には Issue 本文、最新コメント、関連 diff、関連 docs から確定した API IF と mock 範囲だけを入れる。
 - `Must Read Files` は原則最大8個にし、対象 Controller、DTO、既存 e2e、関連 rules など mock 作業に必要な最小限に絞る。8個を超える場合は、理由を `Known Risks` または `Assumptions` に明記する。

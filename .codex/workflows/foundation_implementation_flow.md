@@ -103,7 +103,7 @@ security、公開契約、データ損失、破壊的 migration に関わる不�
 ## Context Packet handoff
 
 親エージェントは foundation 系の tester、implementer、reviewer を起動する前に
-`docs/ai-api-harness.md` の Context Packet を作成する。
+`docs/agent-context-packet.md` の Context Packet を作成する。
 
 - `Confirmed Requirements` には Issue 本文、最新コメント、関連 diff、関連 docs から確定した基盤要件だけを入れる。
 - `Must Read Files` は原則最大8個にし、対象設定、Module、Guard、Utility、既存 test、関連 rules など基盤変更に必要な最小限に絞る。8個を超える場合は、理由を `Known Risks` または `Assumptions` に明記する。

@@ -56,10 +56,8 @@ JSON schema:
 
 ## Context Packet Policy
 
-- When creating the implementation plan Issue, include enough structured information for the next parent agent to build a Context Packet.
-- Include confirmed contract, target files, out of scope, risks, blocking questions, and acceptance criteria.
-- Use only confirmed facts from the Issue body, latest comments, related mock PR or diff, and relevant docs.
-- Keep target files to 8 or fewer by default; if more are needed, state the reason in risks or assumptions.
-- Do not reinterpret the specification or delegate open-ended whole-repo exploration.
-- Mark security/privacy, auth/authorization, API contract, response compatibility, external provider contract, data loss, destructive migration, financial calculation semantics, sensitive logging, Cookie/JWT/CORS, public API response change, and backward compatibility uncertainty as blocking questions.
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- Context Packet を直接作る責務ではなく、後続 parent agent が Context Packet を作れるように実装計画 Issue に構造化情報を残す。
+- 実装計画 Issue には confirmed contract、target files、out of scope、risks、blocking questions、acceptance criteria を含める。
+- 仕様を再解釈せず、Issue / latest comments / mock PR / diff / docs から確認した事実を構造化する。
 """

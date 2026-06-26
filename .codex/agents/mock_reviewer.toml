@@ -36,14 +36,9 @@ JSON schema:
 
 ## Context Packet Policy
 
-- Treat the Context Packet from the parent agent as the primary input.
-- Read Must Read Files first; read Optional Files only when needed for judgment.
-- Do not perform open-ended whole-repo exploration.
-- Limited repo-wide search is allowed only for boundary, security, OpenAPI schema exposure, module wiring, or regression checks, and the purpose must be stated in the Output Contract common fields.
-- Do not add requirements not present in the Context Packet.
-- If required information is missing, return status "blocked" or "partial" using the Output Contract common fields.
-- Keep the existing JSON schema and add the Output Contract common fields when a Context Packet is used, including status, facts, assumptions, files_read, risks, commands, test_results, and next_action.
-- `commands` must contain only commands executed by the reporting agent; referenced CI, parent-agent, or other-agent results must be recorded in facts instead.
-- Review primarily changed files; use layer-boundary, OpenAPI e2e, and unit tests for broader guarantees.
-- Add files_reviewed when returning the Output Contract common fields.
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- changed files review を基本にする。
+- broader guarantee は layer-boundary / OpenAPI e2e / unit test に寄せる。
+- Output Contract common fields に `files_reviewed` を追加する。
+- OpenAPI 契約変更や Entity exposure は Context Packet で確認されていない限り受け入れない。
 """

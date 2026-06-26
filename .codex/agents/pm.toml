@@ -49,9 +49,8 @@ JSON schema:
 
 ## Context Packet Policy
 
-- Create API IF Issues in a structure that can be converted into a Context Packet by mock_issue_responder.
-- Include confirmed API contract, out of scope, mock response, acceptance criteria, and open questions.
-- Keep requirements traceable to Issue or PR text, latest comments, relevant diff, and relevant docs.
-- Do not use token savings as a reason to skip security, API contract, data loss, or migration confirmation.
-- Do not assign the same mock planning work to multiple agents in parallel.
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- Context Packet を直接作る責務ではなく、`mock_issue_responder` が Context Packet 化しやすい API IF Issue を作る。
+- API IF Issue には confirmed API contract、out of scope、mock response、acceptance criteria、open questions を含める。
+- foundation agent orchestration の責務は持たない。
 """

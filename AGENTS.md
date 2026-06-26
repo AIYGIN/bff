@@ -16,6 +16,7 @@ NestJS BFF の実装前に読む:
 - `docs/bff-code-design-rules.md`
 - `docs/swagger-openapi-rules.md`
 - `docs/ai-api-harness.md`
+- `docs/agent-context-packet.md`
 - `docs/layer-boundaries.md`
 
 作業種別ごとの詳細は必要なものだけ読む:
@@ -43,7 +44,7 @@ output が必要なデバッグ時は通常コマンドでよい。
 
 サブエージェントを使う場合は token 使用量と終了理由を明確に管理する。
 
-- 親エージェントは起動前に `docs/ai-api-harness.md` の Context Packet を作成し、Issue 本文・最新コメント・関連 diff・関連 docs から確定した事実だけを渡す。
+- 親エージェントは起動前に `docs/agent-context-packet.md` の Context Packet を作成し、Issue 本文・最新コメント・関連 diff・関連 docs から確定した事実だけを渡す。
 - サブエージェントは Context Packet を主入力とし、`Must Read Files` を優先する。open-ended な repo 全体探索は禁止し、`Optional Files` は判断に必要な場合だけ読む。
 - layer-boundary、OpenAPI schema exposure、security redaction、module wiring、既存 API 非回帰の確認に必要な限定的 repo-wide search は、目的・検索範囲・使用コマンドを明示した場合だけ許可する。
 - Context Packet にない仕様を勝手に追加しない。不足情報は既存 JSON schema に Output Contract 共通 fields を追加し、`blocked` または `partial` として返す。
