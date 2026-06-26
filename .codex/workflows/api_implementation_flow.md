@@ -104,7 +104,7 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 
 ## Context Packet handoff
 
-親エージェントは planner、implementer、reviewer などのサブエージェントを起動する前に
+親エージェントは implementation_tester、implementation_implementer、implementation_reviewer などのサブエージェントを起動する前に
 `docs/ai-api-harness.md` の Context Packet を作成する。
 
 - `Confirmed Requirements` には Controller mock PR で合意済みの OpenAPI 契約、Issue 本文、最新コメント、関連 diff、関連 docs から確定した実装要件だけを入れる。

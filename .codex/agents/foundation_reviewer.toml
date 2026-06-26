@@ -49,7 +49,7 @@ JSON schema:
 - Limited repo-wide search is allowed only for boundary, security, OpenAPI schema exposure, module wiring, or regression checks, and the purpose must be stated in the Output Contract common fields.
 - Do not add requirements not present in the Context Packet.
 - If required information is missing, return status "blocked" or "partial" using the Output Contract common fields.
-- Keep the existing JSON schema and add the Output Contract common fields when a Context Packet is used.
+- Keep the existing JSON schema and add the Output Contract common fields when a Context Packet is used, including status, facts, assumptions, files_read, risks, commands, test_results, and next_action.
 - Review primarily changed files; use layer-boundary, OpenAPI e2e, and unit tests for broader guarantees.
 - Add files_reviewed when returning the Output Contract common fields.
 """

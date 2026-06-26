@@ -267,11 +267,35 @@ Output Contract は各 agent の既存 JSON schema を置き換えない。
   "assumptions": [],
   "files_read": [],
   "risks": [],
+  "commands": [],
+  "test_results": "pass|fail|not_run with reason",
   "next_action": "..."
 }
 
 reviewer 系 agent は必要に応じて `files_reviewed` も追加する。
-`files_changed`、`commands`、`test_results` など既存 schema にある fields は維持する。
+既存 schema にすでに `commands` / `test_results` がある agent では、既存 field を
+Output Contract common field として扱い、重複定義しない。`files_changed` など
+既存 schema にある fields は維持する。
+
+`commands` には、サブエージェントが実行した検証コマンド、または結果として参照した
+検証コマンドを書く。実行していない場合は空配列にし、理由を `test_results` に書く。
+
+```json
+{
+  "commands": ["pnpm test --runInBand"],
+  "test_results": "pass"
+}
+```
+
+```json
+{
+  "commands": [],
+  "test_results": "not_run because this is a docs-only review"
+}
+```
+
+`test_results` には、検証結果を書く。実行した場合は pass/fail summary を書く。
+実行していない場合は `not_run because ...` の形式で理由を書く。
 ```
 
 ### Token Policy
