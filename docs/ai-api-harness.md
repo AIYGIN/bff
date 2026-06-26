@@ -189,13 +189,21 @@ Packet を作成する。Context Packet はサブエージェントの標準入�
 サブエージェントに仕様の再解釈を任せない。
 
 サブエージェントは Context Packet を主入力として扱い、`Must Read Files` を優先して読む。
-repo 全体探索は原則禁止する。`Optional Files` は判断に必要な場合だけ読む。Context
-Packet にない仕様を勝手に追加せず、不足情報があれば Output Contract の
+open-ended な repo 全体探索は禁止する。ただし、layer-boundary、OpenAPI schema
+exposure、security redaction、module wiring、既存 API 非回帰の確認に必要な場合は、
+目的・検索範囲・使用コマンドを Output Contract の共通 fields に明記したうえで、
+限定的な repo-wide search を許可する。
+
+`Optional Files` は判断に必要な場合だけ読む。Context Packet にない仕様を勝手に追加せず、
+不足情報があれば既存 JSON schema に Output Contract の共通 fields を追加し、
 `status` を `blocked` または `partial` にして返す。
 
-security、API 契約、data loss、migration に関わる不明点は `Blocking Questions`
-に入れる。それ以外の不明点は `Assumptions` に明記して進める。親エージェントは
-サブエージェントの要約を一次情報の完全な代替にせず、採用前に必要な一次情報と照合する。
+security/privacy、auth/authorization、API contract/response compatibility、data loss、
+destructive migration、external provider contract、financial calculation semantics、
+logging of sensitive data、Cookie/JWT/CORS、public API response の変更、backward
+compatibility に関わる不明点は `Blocking Questions` に入れる。それ以外の不明点は
+`Assumptions` に明記して進める。親エージェントはサブエージェントの要約を一次情報の
+完全な代替にせず、採用前に必要な一次情報と照合する。
 
 ```md
 # Context Packet
@@ -206,13 +214,21 @@ security、API 契約、data loss、migration に関わる不明点は `Blocking
 - 目的:
 
 ## Confirmed Requirements
--
+- 確定した要件を書く。可能な限り各項目に source を付ける。
+  - source: Issue #12 body
 
 ## Out of Scope
 -
 
+## Source References
+- Issue:
+- Latest comments:
+- PR / diff:
+- Docs:
+
 ## Must Read Files
-- 最大8個まで
+- 原則最大8個まで
+- 8個を超える場合は、なぜ必要かを Known Risks または Assumptions に明記する
 
 ## Optional Files
 - 最大5個まで
@@ -235,26 +251,29 @@ security、API 契約、data loss、migration に関わる不明点は `Blocking
 -
 
 ## Output Contract
-必ず以下の JSON で返す。
+Output Contract は各 agent の既存 JSON schema を置き換えない。
+各 agent は既存 JSON schema を維持したうえで、Context Packet 使用時は
+以下の共通 fields を追加して返す。
 
 {
   "status": "pass|blocked|partial|fail",
-  "summary": "short summary",
   "facts": [],
   "assumptions": [],
   "files_read": [],
-  "files_changed": [],
-  "commands": [],
-  "test_results": "pass/fail/not_run with reason",
   "risks": [],
   "next_action": "..."
 }
+
+reviewer 系 agent は必要に応じて `files_reviewed` も追加する。
+`files_changed`、`commands`、`test_results` など既存 schema にある fields は維持する。
 ```
 
 ### Token Policy
 
-- `Must Read Files` は最大8個、`Optional Files` は最大5個にする。
-- サブエージェントの出力は Output Contract に沿って簡潔にする。
+- `Must Read Files` は原則最大8個、`Optional Files` は最大5個にする。
+- `Must Read Files` が8個を超える場合は、なぜ必要かを Context Packet の
+  `Known Risks` または `Assumptions` に明記する。
+- サブエージェントの出力は既存 JSON schema と Output Contract 共通 fields に沿って簡潔にする。
 - 長い command output をそのまま貼らない。
 - まず要約出力を確認し、失敗時だけ raw、verbose、json output を確認する。
 - `git diff` は最初に stat または name-only を確認し、必要な path だけ詳細を見る。

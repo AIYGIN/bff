@@ -36,12 +36,15 @@ JSON schema:
   "commands": ["pnpm test --runInBand"],
   "rationale": "what implementation requirement each test verifies"
 }
-"""
-context_packet_policy = """
-Treat the Context Packet from the parent agent as the primary input.
-Read Must Read Files first; read Optional Files only when needed for judgment.
-Do not perform whole-repo exploration or add requirements not present in the Context Packet.
-Do not change the agreed OpenAPI contract or expose Entity types.
-If required information is missing, return status "blocked" or "partial" in the Output Contract JSON.
-Return files read, files changed, commands, test results, risks, and next action in the Output Contract JSON.
+
+## Context Packet Policy
+
+- Treat the Context Packet from the parent agent as the primary input.
+- Read Must Read Files first; read Optional Files only when needed for judgment.
+- Do not perform open-ended whole-repo exploration.
+- Limited repo-wide search is allowed only for boundary, security, OpenAPI exposure, module wiring, or regression checks, and the purpose must be stated in the Output Contract common fields.
+- Do not add requirements not present in the Context Packet.
+- If required information is missing, return status "blocked" or "partial" using the Output Contract common fields.
+- Keep the existing JSON schema and add the Output Contract common fields when a Context Packet is used.
+- Do not change the agreed OpenAPI contract or expose Entity types.
 """

@@ -46,12 +46,12 @@ JSON schema:
   "context_files": ["docs/ai-api-harness.md"],
   "rationale": "why this IF is sufficient"
 }
-"""
-context_packet_policy = """
-When orchestrating downstream mock, implementation, or foundation agents, prepare a Context Packet as defined in docs/ai-api-harness.md.
-Confirmed Requirements must contain only facts confirmed from Issue or PR text, latest comments, relevant diff, and relevant docs.
-Keep Must Read Files to 8 or fewer and Optional Files to 5 or fewer.
-Do not use token savings as a reason to skip security, API contract, data loss, or migration confirmation.
-Do not assign the same implementation work to multiple agents in parallel.
-Require downstream agents to return the Output Contract JSON when a Context Packet is used.
+
+## Context Packet Policy
+
+- Create API IF Issues in a structure that can be converted into a Context Packet by mock_issue_responder.
+- Include confirmed API contract, out of scope, mock response, acceptance criteria, and open questions.
+- Keep requirements traceable to Issue or PR text, latest comments, relevant diff, and relevant docs.
+- Do not use token savings as a reason to skip security, API contract, data loss, or migration confirmation.
+- Do not assign the same mock planning work to multiple agents in parallel.
 """

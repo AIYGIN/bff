@@ -63,12 +63,14 @@ JSON schema:
   "pr_body": "draft PR body markdown",
   "rationale": "why the implementation satisfies the issue"
 }
-"""
-context_packet_policy = """
-Before starting foundation tester, implementer, or reviewer sub-agents, create a Context Packet as defined in docs/ai-api-harness.md.
-Include only confirmed facts from the Issue body, latest comments, relevant diff, and relevant docs in Confirmed Requirements.
-Keep Must Read Files to 8 or fewer and Optional Files to 5 or fewer.
-Do not ask sub-agents to re-interpret the specification, add unrequested cross-cutting behavior, or explore the whole repo.
-Do not run the same implementation work in parallel with a sub-agent.
-Require sub-agents to return the Output Contract JSON.
+
+## Context Packet Policy
+
+- Before starting foundation tester, implementer, or reviewer sub-agents, create a Context Packet as defined in docs/ai-api-harness.md.
+- Include only confirmed facts from the Issue body, latest comments, relevant diff, and relevant docs in Confirmed Requirements.
+- Keep Must Read Files to 8 or fewer by default; if more are needed, state the reason in Known Risks or Assumptions.
+- Do not ask sub-agents to re-interpret the specification, add unrequested cross-cutting behavior, or perform open-ended whole-repo exploration.
+- Limited repo-wide search is allowed only for boundary, security, OpenAPI exposure, module wiring, or regression checks, and the purpose must be stated in the Output Contract common fields.
+- Do not run the same implementation work in parallel with a sub-agent.
+- Require sub-agents to keep their existing JSON schema and add the Output Contract common fields when a Context Packet is used.
 """
