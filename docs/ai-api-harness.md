@@ -211,7 +211,7 @@ compatibility に関わる不明点は `Blocking Questions` に入れる。そ�
 `facts` には、サブエージェントが作業中に追加で確認した事実を書く。
 サブエージェントは `facts` に Context Packet の内容を丸写ししない。
 
-```md
+````md
 # Context Packet
 
 ## Task
@@ -277,8 +277,11 @@ reviewer 系 agent は必要に応じて `files_reviewed` も追加する。
 Output Contract common field として扱い、重複定義しない。`files_changed` など
 既存 schema にある fields は維持する。
 
-`commands` には、サブエージェントが実行した検証コマンド、または結果として参照した
-検証コマンドを書く。実行していない場合は空配列にし、理由を `test_results` に書く。
+`commands` には、サブエージェント自身が実行した検証コマンドを書く。
+自分では実行せず、親エージェント、別サブエージェント、または CI の検証結果を参照した場合は、
+`commands` には入れず、`facts` に参照元と確認した事実を書く。
+実行していない場合は `commands` を空配列にし、`test_results` に
+`not_run because ...` の形式で理由を書く。
 
 ```json
 {
@@ -290,13 +293,14 @@ Output Contract common field として扱い、重複定義しない。`files_ch
 ```json
 {
   "commands": [],
-  "test_results": "not_run because this is a docs-only review"
+  "facts": ["CI result for pnpm test --runInBand was pass in PR #123"],
+  "test_results": "not_run because CI result was referenced instead of running locally"
 }
 ```
 
 `test_results` には、検証結果を書く。実行した場合は pass/fail summary を書く。
 実行していない場合は `not_run because ...` の形式で理由を書く。
-```
+````
 
 ### Token Policy
 

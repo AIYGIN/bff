@@ -45,5 +45,6 @@ JSON schema:
 - Do not add requirements not present in the Context Packet.
 - If required information is missing, return status "blocked" or "partial" using the Output Contract common fields.
 - Keep the existing JSON schema and add the Output Contract common fields when a Context Packet is used, including status, facts, assumptions, files_read, risks, commands, test_results, and next_action.
+- `commands` must contain only commands executed by the reporting agent; referenced CI, parent-agent, or other-agent results must be recorded in facts instead.
 - Do not change API scope beyond the confirmed controller mock contract.
 """

@@ -73,4 +73,5 @@ JSON schema:
 - Limited repo-wide search is allowed only for boundary, security, OpenAPI schema exposure, module wiring, or regression checks, and the purpose must be stated in the Output Contract common fields.
 - Do not run the same implementation work in parallel with a sub-agent.
 - Require sub-agents to keep their existing JSON schema and add the Output Contract common fields when a Context Packet is used, including status, facts, assumptions, files_read, risks, commands, test_results, and next_action.
+- `commands` must contain only commands executed by the reporting agent; referenced CI, parent-agent, or other-agent results must be recorded in facts instead.
 """
