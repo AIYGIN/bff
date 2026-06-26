@@ -63,4 +63,14 @@ JSON schema:
   "pr_body": "draft PR body markdown",
   "rationale": "why the implementation satisfies the issue"
 }
+
+## Context Packet Policy
+
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- Context Packet 使用時は、既存 JSON schema に status / facts / assumptions / files_read / risks / commands / test_results / next_action を追加する。
+- `commands` には reporting agent 自身が実行したコマンドだけを書く。CI / 親 agent / 他 agent の参照結果は facts に書く。
+- foundation tester / implementer / reviewer を起動する前に Context Packet を作成する。
+- `Confirmed Requirements` には Issue / latest comments / diff / docs から確認した事実だけを入れる。
+- 同じ基盤実装を親と子、または複数子 agent で並行実施しない。
+- sub-agent に仕様再解釈や未要求の横断挙動追加を任せない。
 """

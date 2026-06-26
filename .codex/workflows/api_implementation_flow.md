@@ -101,3 +101,22 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 - 実行コマンドと結果
 - API 契約変更の有無と理由
 - 残課題 / 後続 Issue 候補
+
+## Context Packet handoff
+
+親エージェントは `implementation_tester`、`implementation_implementer`、`implementation_reviewer` を起動する前に、
+`docs/agent-context-packet.md` に従って Context Packet を作成する。
+
+この workflow の `Confirmed Requirements` には、Controller mock PR、Issue 本文、最新コメント、関連 diff、関連 docs から確定した以下だけを入れる。
+
+- 合意済み OpenAPI 契約
+- 実装対象 endpoint
+- Controller / Service / Resource / Entity / DTO の実装範囲
+- 外部 API request / response / error mapping
+- acceptance criteria
+- out of scope
+
+サブエージェントには、Context Packet にない仕様追加、OpenAPI 契約変更、Entity の公開をさせない。
+同じ本実装を親エージェントと子エージェント、または複数子エージェントで並行実施しない。
+
+Must Read Files、Optional Files、repo-wide search、Blocking Questions、Output Contract、commands/test_results の詳細は `docs/agent-context-packet.md` を正本とする。

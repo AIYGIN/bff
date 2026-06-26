@@ -37,4 +37,13 @@ JSON schema:
   "test_results": "pass/fail summary",
   "rationale": "why this satisfies tests and implementation issue"
 }
+
+## Context Packet Policy
+
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- Context Packet 使用時は、既存 JSON schema に status / facts / assumptions / files_read / risks / commands / test_results / next_action を追加する。
+- `commands` には reporting agent 自身が実行したコマンドだけを書く。CI / 親 agent / 他 agent の参照結果は facts に書く。
+- Context Packet にない実装範囲を追加しない。
+- agreed OpenAPI contract を変更しない。
+- Entity を OpenAPI に公開しない。
 """

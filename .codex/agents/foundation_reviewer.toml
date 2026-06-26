@@ -40,4 +40,14 @@ JSON schema:
   "suggested_changes": ["short suggestion"],
   "rationale": "why these findings matter"
 }
+
+## Context Packet Policy
+
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- Context Packet 使用時は、既存 JSON schema に status / facts / assumptions / files_read / risks / commands / test_results / next_action を追加する。
+- `commands` には reporting agent 自身が実行したコマンドだけを書く。CI / 親 agent / 他 agent の参照結果は facts に書く。
+- changed files review を基本にする。
+- broader guarantee は layer-boundary / OpenAPI e2e / unit test に寄せる。
+- Output Contract common fields に `files_reviewed` を追加する。
+- OpenAPI 契約変更や Entity exposure は Context Packet で確認されていない限り受け入れない。
 """

@@ -15,6 +15,7 @@ Issue 駆動で実装するためのハーネス設計を定義する。
 ## 参照ルール
 
 - `AGENTS.md`
+- `docs/agent-context-packet.md`
 - `docs/bff-code-design-rules.md`
 - `docs/layer-boundaries.md`
 - `docs/swagger-openapi-rules.md`
@@ -181,3 +182,18 @@ Controller mock PR は、最低限以下を満たすこと。
 - 実行した command と結果を記載する。
 - mock であること、後続で Resource 実装が必要なことを明記する。
 - 本実装 PR では、実装計画 Issue、RED/GREEN の記録、外部 API / Resource / Service の設計判断を記載する。
+
+## Context Packet
+
+親エージェントがサブエージェントへ作業を渡す場合は、起動前に Context Packet を作成する。
+Context Packet は、Issue 本文、最新コメント、関連 diff、関連 docs から確認できた事実だけを渡すための標準入力である。
+
+詳細な schema、Output Contract、token policy、repo-wide search の例外条件は `docs/agent-context-packet.md` を正本とする。
+
+重要:
+
+- サブエージェントに仕様の再解釈を任せない。
+- Context Packet にない仕様を勝手に追加しない。
+- open-ended な repo 全体探索は禁止する。
+- 限定的 repo-wide search は boundary / security / OpenAPI schema exposure / module wiring / regression checks の確認に必要な場合だけ許可する。
+- Output Contract は既存 JSON schema を置き換えず、common fields を追加する。

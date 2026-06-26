@@ -46,4 +46,13 @@ JSON schema:
   "context_files": ["docs/ai-api-harness.md"],
   "rationale": "why this IF is sufficient"
 }
+
+## Context Packet Policy
+
+- Context Packet を受け取った場合は `docs/agent-context-packet.md` を必ず読み、同 doc を正本として扱う。
+- Context Packet 使用時は、既存 JSON schema に status / facts / assumptions / files_read / risks / commands / test_results / next_action を追加する。
+- `commands` には reporting agent 自身が実行したコマンドだけを書く。CI / 親 agent / 他 agent の参照結果は facts に書く。
+- Context Packet を直接作る責務ではなく、`mock_issue_responder` が Context Packet 化しやすい API IF Issue を作る。
+- API IF Issue には confirmed API contract、out of scope、mock response、acceptance criteria、open questions を含める。
+- foundation agent orchestration の責務は持たない。
 """

@@ -99,3 +99,25 @@ security、公開契約、データ損失、破壊的 migration に関わる不�
 - RED/GREEN の実行ログ
 - 実行コマンドと結果
 - 残課題 / 後続 Issue 候補
+
+## Context Packet handoff
+
+親エージェントは foundation 系の tester、implementer、reviewer を起動する前に、
+`docs/agent-context-packet.md` に従って Context Packet を作成する。
+
+この workflow の `Confirmed Requirements` には、Issue 本文、最新コメント、関連 diff、関連 docs から確定した以下だけを入れる。
+
+- 基盤要件
+- public interface
+- configuration / defaults
+- security / privacy constraints
+- compatibility constraints
+- failure behavior
+- test plan
+- acceptance criteria
+- out of scope
+
+サブエージェントには、Context Packet にない仕様追加や横断挙動の変更をさせない。
+同じ基盤実装を親エージェントと子エージェント、または複数子エージェントで並行実施しない。
+
+Must Read Files、Optional Files、repo-wide search、Blocking Questions、Output Contract、commands/test_results の詳細は `docs/agent-context-packet.md` を正本とする。

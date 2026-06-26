@@ -81,3 +81,22 @@ NestJS BFF の API 追加は、Issue Driven + Test Driven Development で進め�
 - 実行コマンドと結果
 - mock の制限事項
 - 後続 Issue 候補
+
+## Context Packet handoff
+
+親エージェントは `mock_tester`、`mock_implementer`、`mock_reviewer` を起動する前に、
+`docs/agent-context-packet.md` に従って Context Packet を作成する。
+
+この workflow の `Confirmed Requirements` には、Issue 本文、最新コメント、関連 diff、関連 docs から確定した以下だけを入れる。
+
+- API IF
+- Controller mock 範囲
+- mock response
+- Swagger / OpenAPI 契約
+- acceptance criteria
+- out of scope
+
+サブエージェントには、Context Packet にない仕様追加や API 契約変更をさせない。
+同じ controller mock 実装を親エージェントと子エージェント、または複数子エージェントで並行実施しない。
+
+Must Read Files、Optional Files、repo-wide search、Blocking Questions、Output Contract、commands/test_results の詳細は `docs/agent-context-packet.md` を正本とする。
