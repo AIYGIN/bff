@@ -181,3 +181,83 @@ Controller mock PR は、最低限以下を満たすこと。
 - 実行した command と結果を記載する。
 - mock であること、後続で Resource 実装が必要なことを明記する。
 - 本実装 PR では、実装計画 Issue、RED/GREEN の記録、外部 API / Resource / Service の設計判断を記載する。
+## Context Packet
+
+親エージェントがサブエージェントへ作業を渡す場合は、起動前に Context
+Packet を作成する。Context Packet はサブエージェントの標準入力であり、Issue
+本文、最新コメント、関連 diff、関連 docs から確認できた事実だけを渡すために使う。
+サブエージェントに仕様の再解釈を任せない。
+
+サブエージェントは Context Packet を主入力として扱い、`Must Read Files` を優先して読む。
+repo 全体探索は原則禁止する。`Optional Files` は判断に必要な場合だけ読む。Context
+Packet にない仕様を勝手に追加せず、不足情報があれば Output Contract の
+`status` を `blocked` または `partial` にして返す。
+
+security、API 契約、data loss、migration に関わる不明点は `Blocking Questions`
+に入れる。それ以外の不明点は `Assumptions` に明記して進める。親エージェントは
+サブエージェントの要約を一次情報の完全な代替にせず、採用前に必要な一次情報と照合する。
+
+```md
+# Context Packet
+
+## Task
+- 対象作業:
+- Issue / PR:
+- 目的:
+
+## Confirmed Requirements
+-
+
+## Out of Scope
+-
+
+## Must Read Files
+- 最大8個まで
+
+## Optional Files
+- 最大5個まで
+
+## Relevant Rules
+- 対象作業に必要なルールだけを書く
+- 詳細 docs への参照を書く
+- ルール全文の貼り付けは避ける
+
+## Acceptance Criteria
+-
+
+## Known Risks
+-
+
+## Blocking Questions
+- none または質問一覧
+
+## Assumptions
+-
+
+## Output Contract
+必ず以下の JSON で返す。
+
+{
+  "status": "pass|blocked|partial|fail",
+  "summary": "short summary",
+  "facts": [],
+  "assumptions": [],
+  "files_read": [],
+  "files_changed": [],
+  "commands": [],
+  "test_results": "pass/fail/not_run with reason",
+  "risks": [],
+  "next_action": "..."
+}
+```
+
+### Token Policy
+
+- `Must Read Files` は最大8個、`Optional Files` は最大5個にする。
+- サブエージェントの出力は Output Contract に沿って簡潔にする。
+- 長い command output をそのまま貼らない。
+- まず要約出力を確認し、失敗時だけ raw、verbose、json output を確認する。
+- `git diff` は最初に stat または name-only を確認し、必要な path だけ詳細を見る。
+- reviewer は原則 changed-files review に寄せる。
+- 全体保証は layer-boundary test、OpenAPI e2e、unit test に寄せる。
+- token 節約を理由に security、API 契約、data loss、migration に関わる確認を省略しない。

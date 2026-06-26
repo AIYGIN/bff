@@ -43,6 +43,9 @@ output が必要なデバッグ時は通常コマンドでよい。
 
 サブエージェントを使う場合は token 使用量と終了理由を明確に管理する。
 
+- 親エージェントは起動前に `docs/ai-api-harness.md` の Context Packet を作成し、Issue 本文・最新コメント・関連 diff・関連 docs から確定した事実だけを渡す。
+- サブエージェントは Context Packet を主入力とし、`Must Read Files` を優先する。repo 全体探索は原則禁止し、`Optional Files` は判断に必要な場合だけ読む。
+- Context Packet にない仕様を勝手に追加しない。不足情報は Output Contract の JSON で `blocked` または `partial` として返す。
 - 委譲した作業と同じ実装を親エージェントが並行して進めない。
 - 長時間 running のままでも、ユーザー確認なしに close/shutdown しない。
 - 止める前に、待機時間、最後に観測できた状態、終了しない理由として断定できる事実、不明点、継続/停止/親側引き継ぎの選択肢をユーザーへ説明する。

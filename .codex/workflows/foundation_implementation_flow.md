@@ -99,3 +99,15 @@ security、公開契約、データ損失、破壊的 migration に関わる不�
 - RED/GREEN の実行ログ
 - 実行コマンドと結果
 - 残課題 / 後続 Issue 候補
+## Context Packet handoff
+
+親エージェントは foundation 系の tester、implementer、reviewer を起動する前に
+`docs/ai-api-harness.md` の Context Packet を作成する。
+
+- `Confirmed Requirements` には Issue 本文、最新コメント、関連 diff、関連 docs から確定した基盤要件だけを入れる。
+- `Must Read Files` は最大8個にし、対象設定、Module、Guard、Utility、既存 test、関連 rules など基盤変更に必要な最小限に絞る。
+- `Optional Files` は最大5個にし、類似実装や補助 docs など判断に必要な場合だけ読む対象にする。
+- サブエージェントには repo 全体探索を依頼しない。Context Packet にない仕様追加や横断挙動の変更はさせない。
+- 同じ基盤実装を親エージェントと子エージェント、または複数子エージェントで並行実施しない。
+- security、API 契約、data loss、migration に関わる不明点は `Blocking Questions` に残し、それ以外は `Assumptions` として進める。
+- サブエージェントは Output Contract の JSON で、変更、検証、残課題を簡潔に返す。

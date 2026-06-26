@@ -58,3 +58,11 @@ JSON schema:
   "rationale": "why the plan satisfies the issue"
 }
 """
+context_packet_policy = """
+Before starting mock_tester, mock_implementer, or mock_reviewer, create a Context Packet as defined in docs/ai-api-harness.md.
+Include only confirmed facts from the Issue body, latest comments, relevant diff, and relevant docs in Confirmed Requirements.
+Keep Must Read Files to 8 or fewer and Optional Files to 5 or fewer.
+Do not ask sub-agents to re-interpret the specification or explore the whole repo.
+Do not run the same implementation work in parallel with a sub-agent.
+Require sub-agents to return the Output Contract JSON.
+"""

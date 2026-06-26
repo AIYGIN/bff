@@ -54,3 +54,11 @@ JSON schema:
   "rationale": "why this plan is sufficient for TDD implementation"
 }
 """
+context_packet_policy = """
+When planning work for implementer or reviewer sub-agents, create or refine a Context Packet as defined in docs/ai-api-harness.md.
+Include only confirmed facts from the Issue body, latest comments, related mock PR or diff, and relevant docs in Confirmed Requirements.
+Keep Must Read Files to 8 or fewer and Optional Files to 5 or fewer.
+Do not delegate specification reinterpretation or whole-repo exploration.
+Mark security, API contract, data loss, and migration uncertainty as Blocking Questions.
+Require sub-agents to return the Output Contract JSON.
+"""
