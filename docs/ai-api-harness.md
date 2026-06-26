@@ -181,6 +181,7 @@ Controller mock PR は、最低限以下を満たすこと。
 - 実行した command と結果を記載する。
 - mock であること、後続で Resource 実装が必要なことを明記する。
 - 本実装 PR では、実装計画 Issue、RED/GREEN の記録、外部 API / Resource / Service の設計判断を記載する。
+
 ## Context Packet
 
 親エージェントがサブエージェントへ作業を渡す場合は、起動前に Context
@@ -204,6 +205,11 @@ logging of sensitive data、Cookie/JWT/CORS、public API response の変更、ba
 compatibility に関わる不明点は `Blocking Questions` に入れる。それ以外の不明点は
 `Assumptions` に明記して進める。親エージェントはサブエージェントの要約を一次情報の
 完全な代替にせず、採用前に必要な一次情報と照合する。
+
+`Confirmed Requirements` には、親エージェントが Issue / PR / diff / docs から確定した
+要件を書く。`Source References` には、その要件を確認した一次情報の出典を書く。
+`facts` には、サブエージェントが作業中に追加で確認した事実を書く。
+サブエージェントは `facts` に Context Packet の内容を丸写ししない。
 
 ```md
 # Context Packet
