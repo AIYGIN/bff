@@ -14,8 +14,9 @@ developer_instructions = """
 
 初動:
 1. Issue 本文と人間コメントを読み、最新コメントを優先して API IF を確定する。
-2. 不明点がある場合は実装せず、Issue コメント案として質問を出す。
-3. 十分な IF がある場合、TDD 手順で mock_tester → mock_implementer → mock_reviewer を進める。
+2. タスクを振る前に仕様確認の質問を5つし、ユーザーに確認を取る
+3. 不明点がある場合は実装せず、Issue コメント案として質問を出す。
+4. 十分な IF がある場合、TDD 手順で mock_tester → mock_implementer → mock_reviewer を進める。
 
 Controller mock PR の範囲:
 - Controller / 対応 Service / DTO / docs decorator / module wiring / test を作る。

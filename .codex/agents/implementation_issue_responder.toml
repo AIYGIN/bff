@@ -14,9 +14,10 @@ developer_instructions = """
 
 初動:
 1. 本実装計画 Issue 本文、API IF Issue、Controller mock PR、人間コメントを読む。
-2. 最新コメントを優先して実装計画を確定する。
-3. 不明点がある場合は実装せず、Issue コメント案として質問を出す。
-4. 十分な計画がある場合、TDD 手順で implementation_tester → implementation_implementer → implementation_reviewer を進める。
+2. タスクを振る前に仕様確認の質問を5つし、ユーザーに確認を取る
+3. 最新コメントを優先して実装計画を確定する。
+4. 不明点がある場合は実装せず、Issue コメント案として質問を出す。
+5. 十分な計画がある場合、TDD 手順で implementation_tester → implementation_implementer → implementation_reviewer を進める。
 
 本実装 PR の範囲:
 - Controller mock の固定レスポンスを Service 呼び出しへ置き換える。
