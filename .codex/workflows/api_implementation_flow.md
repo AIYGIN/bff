@@ -104,14 +104,19 @@ NestJS BFF の本実装は、Controller mock PR で合意した Swagger/OpenAPI 
 
 ## Context Packet handoff
 
-親エージェントは implementation_tester、implementation_implementer、implementation_reviewer などのサブエージェントを起動する前に
-`docs/agent-context-packet.md` の Context Packet を作成する。
+親エージェントは `implementation_tester`、`implementation_implementer`、`implementation_reviewer` を起動する前に、
+`docs/agent-context-packet.md` に従って Context Packet を作成する。
 
-- `Confirmed Requirements` には Controller mock PR で合意済みの OpenAPI 契約、Issue 本文、最新コメント、関連 diff、関連 docs から確定した実装要件だけを入れる。
-- `Must Read Files` は原則最大8個にし、対象 Controller、DTO、Service、Resource、既存 test、関連 rules など本実装に必要な最小限に絞る。8個を超える場合は、理由を `Known Risks` または `Assumptions` に明記する。
-- `Optional Files` は最大5個にし、類似 API や補助 docs など判断に必要な場合だけ読む対象にする。
-- サブエージェントには open-ended な repo 全体探索を依頼しない。ただし、layer-boundary、OpenAPI schema exposure、security redaction、module wiring、既存 API 非回帰の確認に必要な場合は、目的・検索範囲・使用コマンドを明示した限定的 repo-wide search を許可する。
-- Context Packet にない仕様追加、OpenAPI 契約変更、Entity の公開はさせない。
-- 同じ実装を親エージェントと子エージェント、または複数子エージェントで並行実施しない。
-- security/privacy、auth/authorization、API contract/response compatibility、data loss、destructive migration、external provider contract、financial calculation semantics、logging of sensitive data、Cookie/JWT/CORS、public API response の変更、backward compatibility に関わる不明点は `Blocking Questions` に残し、それ以外は `Assumptions` として進める。
-- サブエージェントは既存 JSON schema を維持し、Context Packet 使用時は Output Contract 共通 fields を追加して、変更、検証、残課題を簡潔に返す。
+この workflow の `Confirmed Requirements` には、Controller mock PR、Issue 本文、最新コメント、関連 diff、関連 docs から確定した以下だけを入れる。
+
+- 合意済み OpenAPI 契約
+- 実装対象 endpoint
+- Controller / Service / Resource / Entity / DTO の実装範囲
+- 外部 API request / response / error mapping
+- acceptance criteria
+- out of scope
+
+サブエージェントには、Context Packet にない仕様追加、OpenAPI 契約変更、Entity の公開をさせない。
+同じ本実装を親エージェントと子エージェント、または複数子エージェントで並行実施しない。
+
+Must Read Files、Optional Files、repo-wide search、Blocking Questions、Output Contract、commands/test_results の詳細は `docs/agent-context-packet.md` を正本とする。
