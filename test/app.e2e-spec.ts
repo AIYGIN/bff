@@ -722,12 +722,14 @@ describe("Users API (e2e)", () => {
     const document = response.body as OpenAPIObject;
 
     expect(Object.keys(document.paths)).toEqual([
-      "/portfolio/holdings",
-      "/portfolio/analysis",
+      
+       "/enterprises/quantsInfo",
       "/auth/google/login",
       "/auth/google/callback",
       "/auth/me",
       "/auth/logout",
+      "/portfolio/holdings",
+      "/portfolio/analysis",
       "/todos",
       "/todos/{id}",
     ]);

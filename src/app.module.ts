@@ -4,6 +4,7 @@ import { AppConfigModule } from "./common/config/app-config.module";
 import { AllExceptionsFilter } from "./common/logging/all-exceptions.filter";
 import { LoggingModule } from "./common/logging/logging.module";
 import { AuthModule } from "./controller/auth/auth.module";
+import { EnterprisesModule } from "./controller/enterprises/enterprises.module";
 import { PortfolioModule } from "./controller/portfolio/portfolio.module";
 import { TodoModule } from "./controller/todo/todo.module";
 
@@ -11,6 +12,7 @@ import { TodoModule } from "./controller/todo/todo.module";
   imports: [
     AppConfigModule,
     LoggingModule,
+    EnterprisesModule,
     PortfolioModule,
     TodoModule,
     AuthModule,
