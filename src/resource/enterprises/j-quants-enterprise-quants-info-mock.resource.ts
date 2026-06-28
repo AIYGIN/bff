@@ -1,6 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
-import type { EnterpriseQuantInfoEntity } from "../../entity/enterprise-quants-info.entity";
+import type {
+  EnterpriseDividendAnalysisEntity,
+  EnterpriseQuantInfoEntity,
+} from "../../entity/enterprise-quants-info.entity";
 
 const UPDATED_AT = "2026-06-26T00:00:00.000Z";
 const DATA_AS_OF_DATE = "2026-06-26";
@@ -214,9 +217,80 @@ const buildEnterprise = (
   };
 };
 
+const buildDividendAnalysis = (
+  company: MockCompany,
+  index: number,
+): EnterpriseDividendAnalysisEntity => {
+  const enterprise = buildEnterprise(company, index);
+  const dividendGrowthRate10y = Number((11.2 - index).toFixed(1));
+  const isFcfNotApplicable = company.isFinancialBusiness;
+
+  return {
+    symbolId: enterprise.symbolId,
+    companyName: enterprise.companyName,
+    sector: enterprise.sector,
+    totalScore: enterprise.totalScore,
+    judgement: enterprise.judgement,
+    safetyLabel: enterprise.safetyLabel,
+    metrics: {
+      fcf: isFcfNotApplicable ? null : 150000000 - index * 10000000,
+      payoutRatio: Number((39.4 + index * 0.5).toFixed(1)),
+      dividendGrowthRate10y,
+      dividendCutCount10y: 0,
+      per: Number((10.6 + index * 0.3).toFixed(1)),
+      pbr: Number(Math.max(0.6, 1.2 - index * 0.1).toFixed(1)),
+      roe: Number(Math.max(5.5, 13.3 - index).toFixed(1)),
+    },
+    scoreBreakdown: {
+      fcf: {
+        score: isFcfNotApplicable ? null : enterprise.scoreBreakdown.fcf.score,
+        maxScore: enterprise.scoreBreakdown.fcf.maxScore,
+        isNotApplicable: isFcfNotApplicable,
+        reason: isFcfNotApplicable
+          ? "金融業はFCFの評価対象外のためN/A"
+          : "3年連続プラス",
+      },
+      dividendCutHistory: {
+        ...enterprise.scoreBreakdown.dividendCutHistory,
+        reason: "過去10年で減配なし",
+      },
+      dividendGrowth: {
+        ...enterprise.scoreBreakdown.dividendGrowth,
+        reason: `年平均+${dividendGrowthRate10y}%`,
+      },
+      payoutRatio: {
+        ...enterprise.scoreBreakdown.payoutRatio,
+        reason: "健全な水準",
+      },
+      dividendYield: {
+        ...enterprise.scoreBreakdown.dividendYield,
+        reason: "目安レンジ内",
+      },
+      financialMetrics: {
+        ...enterprise.scoreBreakdown.financialMetrics,
+        reason: "PER/PBR/ROEから補助判定",
+      },
+    },
+    isFinancialBusiness: enterprise.isFinancialBusiness,
+    isFcfNotApplicable,
+    updatedAt: UPDATED_AT,
+    dataAsOfDate: DATA_AS_OF_DATE,
+  };
+};
+
 @Injectable()
 export class JQuantsEnterpriseQuantsInfoMockResource {
   findManyFromJQuantsApiMock(): EnterpriseQuantInfoEntity[] {
     return companies.map(buildEnterprise);
+  }
+
+  findOneDividendAnalysisFromJQuantsApiMock(
+    symbolId: string,
+  ): EnterpriseDividendAnalysisEntity | null {
+    const index = companies.findIndex(
+      (company) => company.symbolId === symbolId,
+    );
+
+    return index === -1 ? null : buildDividendAnalysis(companies[index], index);
   }
 }
