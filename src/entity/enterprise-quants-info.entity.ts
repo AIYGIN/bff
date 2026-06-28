@@ -37,3 +37,53 @@ export type EnterpriseQuantInfoEntity = {
   updatedAt: string;
   dataAsOfDate: string;
 };
+
+export type EnterpriseDividendAnalysisMetricsEntity = {
+  fcf: number | null;
+  payoutRatio: number;
+  dividendGrowthRate10y: number;
+  dividendCutCount10y: number;
+  per: number;
+  pbr: number;
+  roe: number;
+};
+
+export type EnterpriseDividendAnalysisScoreEntity = EnterpriseScoreEntity & {
+  reason: string;
+};
+
+export type EnterpriseDividendAnalysisFcfScoreEntity = {
+  score: number | null;
+  maxScore: number;
+  isNotApplicable: boolean;
+  reason: string;
+};
+
+export type EnterpriseDividendAnalysisPeriodScoreEntity =
+  EnterpriseDividendAnalysisScoreEntity & {
+    periodYears: number;
+  };
+
+export type EnterpriseDividendAnalysisScoreBreakdownEntity = {
+  fcf: EnterpriseDividendAnalysisFcfScoreEntity;
+  dividendCutHistory: EnterpriseDividendAnalysisPeriodScoreEntity;
+  dividendGrowth: EnterpriseDividendAnalysisPeriodScoreEntity;
+  payoutRatio: EnterpriseDividendAnalysisScoreEntity;
+  dividendYield: EnterpriseDividendAnalysisScoreEntity;
+  financialMetrics: EnterpriseDividendAnalysisScoreEntity;
+};
+
+export type EnterpriseDividendAnalysisEntity = {
+  symbolId: string;
+  companyName: string;
+  sector: string;
+  totalScore: number;
+  judgement: string;
+  safetyLabel: EnterpriseSafetyLabel;
+  metrics: EnterpriseDividendAnalysisMetricsEntity;
+  scoreBreakdown: EnterpriseDividendAnalysisScoreBreakdownEntity;
+  isFinancialBusiness: boolean;
+  isFcfNotApplicable: boolean;
+  updatedAt: string;
+  dataAsOfDate: string;
+};

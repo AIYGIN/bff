@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 
+import { GetEnterpriseDividendAnalysisResponseDto } from "../../dto/enterprises/get-enterprise-dividend-analysis-response.dto";
 import { GetEnterpriseQuantsInfoResponseDto } from "../../dto/enterprises/get-enterprise-quants-info-response.dto";
 import { JQuantsEnterpriseQuantsInfoMockResource } from "../../resource/enterprises/j-quants-enterprise-quants-info-mock.resource";
 
@@ -19,6 +20,30 @@ export class EnterprisesService {
       enterprises: this.quantsInfoResource.findManyFromJQuantsApiMock(),
       updatedAt: UPDATED_AT,
       dataAsOfDate: DATA_AS_OF_DATE,
+      isRealtime: false,
+      disclaimers: [DISCLAIMER],
+    });
+  }
+
+  getDividendAnalysis(
+    symbolId: string,
+  ): GetEnterpriseDividendAnalysisResponseDto {
+    const dividendAnalysis =
+      this.quantsInfoResource.findOneDividendAnalysisFromJQuantsApiMock(
+        symbolId,
+      );
+
+    if (dividendAnalysis === null) {
+      throw new NotFoundException("Dividend analysis not found");
+    }
+
+    return new GetEnterpriseDividendAnalysisResponseDto({
+      ...dividendAnalysis,
+      analysisSummary: null,
+      dataSources: [
+        { name: "J-Quants API mock", asOfDate: dividendAnalysis.dataAsOfDate },
+      ],
+      scoreVersion: "dividend-score-v1",
       isRealtime: false,
       disclaimers: [DISCLAIMER],
     });
