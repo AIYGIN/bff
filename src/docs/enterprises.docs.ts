@@ -14,26 +14,27 @@ import { ErrorResponseSchema } from "./schemas/error-response.schema";
 
 export const GetEnterpriseQuantsInfoDocs = () =>
   applyDecorators(
-    ApiTags("enterprises"),
+    ApiTags("Dividend Analysis"),
     ApiCookieAuth("accessTokenCookie"),
     ApiOperation({
-      summary: "企業クオンツ情報取得",
-      description: "企業別のクオンツ情報ランキングを取得する。",
+      summary: "高配当分析向け企業クオンツ情報一覧取得",
+      description:
+        "JWT 認証済みユーザー向けに、保存済みまたは J-Quants API mock 由来の企業クオンツ情報一覧をスコア順で返す。画面リクエスト中に J-Quants API へ同期アクセスしない。未登録銘柄は一覧に含めない。",
     }),
     ApiOkResponse({
-      description: "企業別クオンツ情報ランキング",
+      description: "企業クオンツ情報一覧",
       type: GetEnterpriseQuantsInfoResponseDto,
     }),
     ApiBadRequestResponse({
-      description: "不正なリクエスト",
+      description: "リクエスト不正",
       type: ErrorResponseSchema,
     }),
     ApiUnauthorizedResponse({
-      description: "認証エラー",
+      description: "JWT Cookie がない、または無効",
       type: ErrorResponseSchema,
     }),
     ApiInternalServerErrorResponse({
-      description: "サーバーエラー",
+      description: "保存済み分析データ取得または mock resource 取得に失敗",
       type: ErrorResponseSchema,
     }),
   );
