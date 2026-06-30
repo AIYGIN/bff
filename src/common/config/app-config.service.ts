@@ -109,4 +109,10 @@ export class AppConfigService {
       infer: true,
     });
   }
+
+  get enterpriseDividendAnalysisCsvPath(): string {
+    return this.configService.get("ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH", {
+      infer: true,
+    });
+  }
 }

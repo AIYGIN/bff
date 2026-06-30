@@ -1,9 +1,16 @@
-import { BadRequestException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Optional,
+} from "@nestjs/common";
+import { readFileSync } from "node:fs";
 
 import {
   type DividendAnalysisEntity,
   type FreeCashFlowStatus,
 } from "../../entity/enterprises/dividend-analysis.entity";
+import { AppConfigService } from "../../common/config/app-config.service";
 
 export interface FindDividendAnalysisOptions {
   scoreVersion?: string;
@@ -34,10 +41,6 @@ interface UnifiedCsvRow {
   warnings: string;
 }
 
-const DEFAULT_UNIFIED_CSV = `scoreVersion,symbolId,companyName,market,sector,rank,dividendScore,dividendYield,payoutRatio,per,pbr,roe,equityRatio,freeCashFlow,freeCashFlowStatus,edinetCode,fiscalYear,fiscalPeriodEnd,jquantsAsOf,edinetAsOf,missingFields,warnings
-dividend-score-v1,2914,日本たばこ産業,Prime,食料品,1,92.4,4.85,72.1,14.2,1.55,10.8,52.3,1234567890,AVAILABLE,E00492,2025,2025-12-31,2026-06-30,2026-06-30,"[]","[]"
-dividend-score-v1,8306,三菱UFJフィナンシャル・グループ,Prime,銀行業,2,88.0,3.45,38.0,11.0,0.85,8.2,4.9,,NOT_APPLICABLE,E03606,2025,2025-03-31,2026-06-30,2026-06-30,"[""freeCashFlow""]","[""financial_sector_fcf_na""]"`;
-
 const REQUIRED_COLUMNS: Array<keyof UnifiedCsvRow> = [
   "scoreVersion",
   "symbolId",
@@ -48,12 +51,12 @@ const REQUIRED_COLUMNS: Array<keyof UnifiedCsvRow> = [
   "jquantsAsOf",
 ];
 
+@Injectable()
 export class UnifiedCsvEnterpriseDividendAnalysisResource {
-  private readonly csvContent: string;
-
-  constructor(csvContent = DEFAULT_UNIFIED_CSV) {
-    this.csvContent = csvContent;
-  }
+  constructor(
+    private readonly appConfigService: AppConfigService,
+    @Optional() private readonly csvContentOverride?: string,
+  ) {}
 
   findMany(
     options: FindDividendAnalysisOptions = {},
@@ -75,7 +78,9 @@ export class UnifiedCsvEnterpriseDividendAnalysisResource {
   }
 
   private parse(): DividendAnalysisEntity[] {
-    const [headerLine, ...dataLines] = this.csvContent.trim().split(/\r?\n/);
+    const [headerLine, ...dataLines] = this.readCsvContent()
+      .trim()
+      .split(/\r?\n/);
     const headers = parseCsvLine(headerLine) as Array<keyof UnifiedCsvRow>;
     const rows = dataLines
       .filter((line) => line.trim().length > 0)
@@ -208,6 +213,23 @@ export class UnifiedCsvEnterpriseDividendAnalysisResource {
       }
       ranks.add(entity.rank);
       ranksByVersion.set(entity.scoreVersion, ranks);
+    }
+  }
+
+  private readCsvContent(): string {
+    if (this.csvContentOverride !== undefined) {
+      return this.csvContentOverride;
+    }
+
+    try {
+      return readFileSync(
+        this.appConfigService.enterpriseDividendAnalysisCsvPath,
+        "utf8",
+      );
+    } catch {
+      throw new InternalServerErrorException({
+        code: "ENTERPRISE_DIVIDEND_ANALYSIS_CSV_UNAVAILABLE",
+      });
     }
   }
 }

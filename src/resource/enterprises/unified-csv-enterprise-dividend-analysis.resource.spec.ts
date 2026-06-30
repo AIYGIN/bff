@@ -1,3 +1,4 @@
+import { type AppConfigService } from "../../common/config/app-config.service";
 import { UnifiedCsvEnterpriseDividendAnalysisResource } from "./unified-csv-enterprise-dividend-analysis.resource";
 
 type CsvRow = Record<string, string>;
@@ -66,7 +67,12 @@ const csvFromRows = (rows: CsvRow[]): string =>
 const createResource = (
   rows: CsvRow[],
 ): UnifiedCsvEnterpriseDividendAnalysisResource =>
-  new UnifiedCsvEnterpriseDividendAnalysisResource(csvFromRows(rows));
+  new UnifiedCsvEnterpriseDividendAnalysisResource(
+    {
+      enterpriseDividendAnalysisCsvPath: ".data/test.csv",
+    } as AppConfigService,
+    csvFromRows(rows),
+  );
 
 const expectValidationColumn = (
   action: () => unknown,
@@ -106,6 +112,27 @@ describe("UnifiedCsvEnterpriseDividendAnalysisResource", () => {
         warnings: ["financial_sector_fcf_na"],
       },
     ]);
+  });
+
+  it("returns a sanitized error when the generated unified CSV cannot be read", () => {
+    const resource = new UnifiedCsvEnterpriseDividendAnalysisResource({
+      enterpriseDividendAnalysisCsvPath:
+        ".data/enterprises/missing-unified-dividend-analysis.csv",
+    } as AppConfigService);
+
+    try {
+      resource.findMany({ scoreVersion: "dividend-score-v1" });
+    } catch (error) {
+      expect(
+        (error as { getResponse?: () => unknown }).getResponse?.(),
+      ).toEqual({
+        code: "ENTERPRISE_DIVIDEND_ANALYSIS_CSV_UNAVAILABLE",
+      });
+      expect(JSON.stringify(error)).not.toContain("missing-unified");
+      return;
+    }
+
+    throw new Error("Expected unavailable CSV error");
   });
 
   it("rejects rows missing required unified CSV fields", () => {

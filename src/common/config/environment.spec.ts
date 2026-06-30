@@ -38,6 +38,8 @@ describe("validateEnvironment", () => {
       GOOGLE_OAUTH_TIMEOUT_MS: 5000,
       SUPABASE_URL: null,
       SUPABASE_SERVICE_ROLE_KEY: null,
+      ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH:
+        ".data/enterprises/unified-dividend-analysis.csv",
     });
   });
 
@@ -53,6 +55,8 @@ describe("validateEnvironment", () => {
         GOOGLE_OAUTH_TIMEOUT_MS: "4999",
         SUPABASE_URL: "https://another-project.supabase.co",
         SUPABASE_SERVICE_ROLE_KEY: "another-supabase-service-role-key",
+        ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH:
+          "private-data/enterprises/generated/unified-dividend-analysis.csv",
       }),
     ).toEqual({
       NODE_ENV: "production",
@@ -76,6 +80,8 @@ describe("validateEnvironment", () => {
       GOOGLE_OAUTH_TIMEOUT_MS: 4999,
       SUPABASE_URL: "https://another-project.supabase.co/",
       SUPABASE_SERVICE_ROLE_KEY: "another-supabase-service-role-key",
+      ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH:
+        "private-data/enterprises/generated/unified-dividend-analysis.csv",
     });
   });
 

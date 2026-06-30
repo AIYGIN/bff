@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
-import { type FreeCashFlowStatus } from "../../entity/enterprises/dividend-analysis.entity";
+import {
+  FREE_CASH_FLOW_STATUSES,
+  type FreeCashFlowStatusDto,
+} from "./free-cash-flow-status.dto";
 
 export class EnterpriseDividendAnalysisMetricsDto {
   @ApiProperty({
@@ -53,10 +56,10 @@ export class EnterpriseDividendAnalysisMetricsDto {
 
   @ApiProperty({
     description: "フリーキャッシュフローの扱い",
-    enum: ["AVAILABLE", "NOT_APPLICABLE", "MISSING"],
+    enum: FREE_CASH_FLOW_STATUSES,
     example: "AVAILABLE",
   })
-  freeCashFlowStatus: FreeCashFlowStatus;
+  freeCashFlowStatus: FreeCashFlowStatusDto;
 
   constructor(args: EnterpriseDividendAnalysisMetricsDto) {
     this.dividendYield = args.dividendYield;

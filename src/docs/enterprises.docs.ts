@@ -24,7 +24,7 @@ export const GetEnterpriseQuantsInfoDocs = () =>
     ApiOperation({
       summary: "高配当候補上位一覧を取得する",
       description:
-        "J-Quants / EDINET への同期アクセスは画面 API リクエスト中に行わない。手動 batch で生成した統一 CSV を import し、normalized model / Dividend Score Calculator の結果を返す。API キー、raw path、raw payload は OpenAPI に記載しない。",
+        "J-Quants / EDINET への同期アクセスは画面 API リクエスト中に行わない。手動 batch で生成した統一データを import し、normalized model / Dividend Score Calculator の結果を返す。内部運用データは公開契約に含めない。",
     }),
     ApiQuery({
       name: "limit",
@@ -77,7 +77,7 @@ export const GetEnterpriseDividendAnalysisDocs = () =>
     ApiOperation({
       summary: "指定銘柄の高配当分析を取得する",
       description:
-        "J-Quants / EDINET への同期アクセスは画面 API リクエスト中に行わない。手動 batch で生成した統一 CSV を import し、normalized model / Dividend Score Calculator の結果を返す。API キー、raw path、raw payload は OpenAPI に記載しない。",
+        "J-Quants / EDINET への同期アクセスは画面 API リクエスト中に行わない。手動 batch で生成した統一データを import し、normalized model / Dividend Score Calculator の結果を返す。内部運用データは公開契約に含めない。",
     }),
     ApiParam({
       name: "symbolId",

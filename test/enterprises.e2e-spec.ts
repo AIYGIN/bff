@@ -4,6 +4,7 @@ import { type OpenAPIObject } from "@nestjs/swagger";
 import request from "supertest";
 
 import { configureApp } from "../src/bootstrap";
+import { AppConfigService } from "../src/common/config/app-config.service";
 import { LoggingModule } from "../src/common/logging/logging.module";
 import { AuthService } from "../src/service/auth/auth.service";
 import { AppModule } from "./../src/app.module";
@@ -48,11 +49,17 @@ const dividendAnalysisResponseKeys = [
 ];
 
 const forbiddenPublicTerms = [
+  "API キー",
+  "api key",
   "apiKey",
   "jquantsApiKey",
   "edinetApiKey",
+  "private CSV path",
+  "privateCsvPath",
   "privateRawPath",
+  "raw path",
   "rawPath",
+  "raw payload",
   "rawPayload",
 ];
 
@@ -69,6 +76,12 @@ describe("EnterprisesController (e2e)", () => {
         verifyAccessToken: jest.fn().mockReturnValue({
           id: "33333333-3333-3333-3333-333333333333",
         }),
+      })
+      .overrideProvider(AppConfigService)
+      .useValue({
+        logLevel: "silent",
+        enterpriseDividendAnalysisCsvPath:
+          "test/fixtures/enterprises/unified-dividend-analysis.csv",
       })
       .overrideProvider(LoggingModule)
       .useValue({})

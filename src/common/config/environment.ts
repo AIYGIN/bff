@@ -32,6 +32,7 @@ export interface EnvironmentVariables {
   GOOGLE_OAUTH_TIMEOUT_MS: number;
   SUPABASE_URL: string | null;
   SUPABASE_SERVICE_ROLE_KEY: string | null;
+  ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH: string;
 }
 
 const isOneOf = <T extends string>(
@@ -274,6 +275,11 @@ export const validateEnvironment = (
     "SUPABASE_SERVICE_ROLE_KEY",
     environment.SUPABASE_SERVICE_ROLE_KEY,
   );
+  const enterpriseDividendAnalysisCsvPath =
+    parseOptionalNonEmpty(
+      "ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH",
+      environment.ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH,
+    ) ?? ".data/enterprises/unified-dividend-analysis.csv";
 
   const productionValues = [
     ["GOOGLE_OAUTH_CLIENT_ID", googleOAuthClientId],
@@ -322,5 +328,6 @@ export const validateEnvironment = (
     GOOGLE_OAUTH_TIMEOUT_MS: googleOAuthTimeoutMs,
     SUPABASE_URL: supabaseUrl,
     SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+    ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH: enterpriseDividendAnalysisCsvPath,
   };
 };
