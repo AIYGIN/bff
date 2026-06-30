@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 
@@ -11,6 +12,10 @@ import {
   GetEnterpriseQuantsInfoDocs,
 } from "../../docs/enterprises.docs";
 import { GetEnterpriseDividendAnalysisResponseDto } from "../../dto/enterprises/get-enterprise-dividend-analysis-response.dto";
+import {
+  GetEnterpriseDividendAnalysisQueryDto,
+  GetEnterpriseQuantsInfoQueryDto,
+} from "../../dto/enterprises/get-enterprise-quants-info-query.dto";
 import { GetEnterpriseQuantsInfoResponseDto } from "../../dto/enterprises/get-enterprise-quants-info-response.dto";
 import { JwtAuthGuard } from "../../guard/jwt-auth.guard";
 import { EnterprisesService } from "../../service/enterprises/enterprises.service";
@@ -22,14 +27,17 @@ export class EnterprisesController {
 
   @Get("quantsInfo")
   @GetEnterpriseQuantsInfoDocs()
-  getQuantsInfo(): GetEnterpriseQuantsInfoResponseDto {
-    return this.enterprisesService.getQuantsInfo();
+  getQuantsInfo(
+    @Query() query: GetEnterpriseQuantsInfoQueryDto,
+  ): GetEnterpriseQuantsInfoResponseDto {
+    return this.enterprisesService.getQuantsInfo(query);
   }
 
   @Get(":symbolId/dividendAnalysis")
   @GetEnterpriseDividendAnalysisDocs()
   getDividendAnalysis(
     @Param("symbolId") symbolId: string,
+    @Query() query: GetEnterpriseDividendAnalysisQueryDto,
   ): GetEnterpriseDividendAnalysisResponseDto {
     if (!/^\d{4}$/.test(symbolId)) {
       throw new BadRequestException(
@@ -37,6 +45,6 @@ export class EnterprisesController {
       );
     }
 
-    return this.enterprisesService.getDividendAnalysis(symbolId);
+    return this.enterprisesService.getDividendAnalysis(symbolId, query);
   }
 }

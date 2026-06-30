@@ -7,22 +7,50 @@ import {
   ApiOperation,
   ApiNotFoundResponse,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 
 import { GetEnterpriseDividendAnalysisResponseDto } from "../dto/enterprises/get-enterprise-dividend-analysis-response.dto";
+import { ENTERPRISE_QUANTS_INFO_SORT_FIELDS } from "../dto/enterprises/get-enterprise-quants-info-query.dto";
 import { GetEnterpriseQuantsInfoResponseDto } from "../dto/enterprises/get-enterprise-quants-info-response.dto";
 import { ErrorResponseSchema } from "./schemas/error-response.schema";
 
 export const GetEnterpriseQuantsInfoDocs = () =>
   applyDecorators(
-    ApiTags("Dividend Analysis"),
+    ApiTags("enterprises"),
     ApiCookieAuth("accessTokenCookie"),
     ApiOperation({
-      summary: "高配当分析向け企業クオンツ情報一覧取得",
+      summary: "高配当候補上位一覧を取得する",
       description:
-        "JWT 認証済みユーザー向けに、保存済みまたは J-Quants API mock 由来の企業クオンツ情報一覧をスコア順で返す。画面リクエスト中に J-Quants API へ同期アクセスしない。未登録銘柄は一覧に含めない。",
+        "J-Quants / EDINET への同期アクセスは画面 API リクエスト中に行わない。手動 batch で生成した統一 CSV を import し、normalized model / Dividend Score Calculator の結果を返す。API キー、raw path、raw payload は OpenAPI に記載しない。",
+    }),
+    ApiQuery({
+      name: "limit",
+      required: false,
+      description: "高配当候補上位 N 件。default 50。",
+      example: 50,
+    }),
+    ApiQuery({
+      name: "sort",
+      required: false,
+      enum: ENTERPRISE_QUANTS_INFO_SORT_FIELDS,
+      description: "並び替え項目。default dividendScore。",
+      example: "dividendScore",
+    }),
+    ApiQuery({
+      name: "order",
+      required: false,
+      enum: ["asc", "desc"],
+      description: "並び順。default desc。",
+      example: "desc",
+    }),
+    ApiQuery({
+      name: "scoreVersion",
+      required: false,
+      description: "スコアリングバージョン。未指定時は最新。",
+      example: "v1",
     }),
     ApiOkResponse({
       description: "企業クオンツ情報一覧",
@@ -37,24 +65,30 @@ export const GetEnterpriseQuantsInfoDocs = () =>
       type: ErrorResponseSchema,
     }),
     ApiInternalServerErrorResponse({
-      description: "保存済み分析データ取得または mock resource 取得に失敗",
+      description: "normalized model 生成または CSV import の想定外エラー",
       type: ErrorResponseSchema,
     }),
   );
 
 export const GetEnterpriseDividendAnalysisDocs = () =>
   applyDecorators(
-    ApiTags("Dividend Analysis"),
+    ApiTags("enterprises"),
     ApiCookieAuth("accessTokenCookie"),
     ApiOperation({
-      summary: "高配当分析詳細取得",
+      summary: "指定銘柄の高配当分析を取得する",
       description:
-        "JWT 認証済みユーザー向けに、指定された4桁証券コードの保存済みまたは J-Quants API mock 由来の高配当分析詳細を返す。画面リクエスト中に J-Quants API へ同期アクセスしない。",
+        "J-Quants / EDINET への同期アクセスは画面 API リクエスト中に行わない。手動 batch で生成した統一 CSV を import し、normalized model / Dividend Score Calculator の結果を返す。API キー、raw path、raw payload は OpenAPI に記載しない。",
     }),
     ApiParam({
       name: "symbolId",
       description: "4桁証券コード。例: 8058, 9432。",
       example: "8058",
+    }),
+    ApiQuery({
+      name: "scoreVersion",
+      required: false,
+      description: "スコアリングバージョン。未指定時は最新。",
+      example: "v1",
     }),
     ApiOkResponse({
       description: "高配当分析詳細",
@@ -73,7 +107,7 @@ export const GetEnterpriseDividendAnalysisDocs = () =>
       type: ErrorResponseSchema,
     }),
     ApiInternalServerErrorResponse({
-      description: "保存済み分析データ取得または mock resource 取得に失敗",
+      description: "normalized model 生成または CSV import の想定外エラー",
       type: ErrorResponseSchema,
     }),
   );

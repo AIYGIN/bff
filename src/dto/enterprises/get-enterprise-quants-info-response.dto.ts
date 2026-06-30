@@ -1,51 +1,59 @@
 import { ApiProperty } from "@nestjs/swagger";
 
+import {
+  type EnterpriseQuantsInfoOrder,
+  type EnterpriseQuantsInfoSort,
+} from "./get-enterprise-quants-info-query.dto";
 import { EnterpriseQuantInfoDto } from "./enterprise-quant-info.dto";
 
 export class GetEnterpriseQuantsInfoResponseDto {
   @ApiProperty({
-    description: "企業別クオンツ情報一覧",
-    type: [EnterpriseQuantInfoDto],
+    description: "スコアリングバージョン",
+    example: "v1",
   })
-  enterprises: EnterpriseQuantInfoDto[];
-
-  @ApiProperty({
-    description: "レスポンス更新日時",
-    example: "2026-06-26T00:00:00.000Z",
-    format: "date-time",
-  })
-  updatedAt: string;
+  scoreVersion: string;
 
   @ApiProperty({
     description: "データ基準日",
-    example: "2026-06-26",
+    example: "2026-06-30",
     format: "date",
   })
-  dataAsOfDate: string;
+  asOf: string;
 
   @ApiProperty({
-    description: "リアルタイムデータかどうか",
-    example: false,
-  })
-  isRealtime: boolean;
-
-  @ApiProperty({
-    description: "利用上の注意",
-    example: [
-      "本画面は配当持続性を分析するためのものであり、特定銘柄の売買を推奨するものではありません。",
+    description: "並び替え項目",
+    enum: [
+      "dividendScore",
+      "rank",
+      "dividendYield",
+      "payoutRatio",
+      "per",
+      "pbr",
+      "roe",
+      "equityRatio",
     ],
-    isArray: true,
-    type: String,
+    example: "dividendScore",
   })
-  disclaimers: string[];
+  sort: EnterpriseQuantsInfoSort;
+
+  @ApiProperty({
+    description: "並び順",
+    enum: ["asc", "desc"],
+    example: "desc",
+  })
+  order: EnterpriseQuantsInfoOrder;
+
+  @ApiProperty({
+    description: "高配当候補一覧",
+    type: [EnterpriseQuantInfoDto],
+  })
+  items: EnterpriseQuantInfoDto[];
 
   constructor(args: GetEnterpriseQuantsInfoResponseDto) {
-    this.enterprises = args.enterprises.map(
-      (item) => new EnterpriseQuantInfoDto(item),
-    );
-    this.updatedAt = args.updatedAt;
-    this.dataAsOfDate = args.dataAsOfDate;
-    this.isRealtime = args.isRealtime;
-    this.disclaimers = args.disclaimers;
+    this.scoreVersion = args.scoreVersion;
+    this.asOf = args.asOf;
+    this.sort = args.sort;
+    this.order = args.order;
+    this.items = args.items.map((item) => new EnterpriseQuantInfoDto(item));
   }
 }
