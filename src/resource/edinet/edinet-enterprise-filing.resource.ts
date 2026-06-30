@@ -2,10 +2,10 @@ import { HttpService } from "@nestjs/axios";
 import { Injectable } from "@nestjs/common";
 import { isAxiosError } from "axios";
 import { firstValueFrom } from "rxjs";
-import { AppConfigService } from "../../../common/config/app-config.service";
-import { AuthConfigurationException } from "../../../common/error/auth-configuration.exception";
-import { ResourceAccessException } from "../../../common/error/resource-access.exception";
-import type { EdinetFinancialDataEntity } from "../../../entity/enterprises/dividend-data-source.entity";
+import { AppConfigService } from "../../common/config/app-config.service";
+import { AuthConfigurationException } from "../../common/error/auth-configuration.exception";
+import { ResourceAccessException } from "../../common/error/resource-access.exception";
+import type { EdinetFinancialDataEntity } from "../../entity/enterprises/dividend-data-source.entity";
 
 interface EdinetDocumentsResponse {
   results?: unknown;

@@ -7,8 +7,8 @@ import type {
   HighDividendCandidateEntity,
   JQuantsEnterpriseDataEntity,
 } from "../../entity/enterprises/dividend-data-source.entity";
-import { EdinetEnterpriseFilingResource } from "../../resource/enterprises/edinet/edinet-enterprise-filing.resource";
-import { JQuantsEnterpriseDataResource } from "../../resource/enterprises/jquants/j-quants-enterprise-data.resource";
+import { EdinetEnterpriseFilingResource } from "../../resource/edinet/edinet-enterprise-filing.resource";
+import { JQuantsEnterpriseDataResource } from "../../resource/jquants/j-quants-enterprise-data.resource";
 
 interface GeneratedDividendAnalysisCsvRow {
   scoreVersion: string;

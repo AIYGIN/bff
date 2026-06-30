@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ExternalHttpModule } from "../../common/http/external-http.module";
-import { EdinetEnterpriseFilingResource } from "../../resource/enterprises/edinet/edinet-enterprise-filing.resource";
-import { JQuantsEnterpriseDataResource } from "../../resource/enterprises/jquants/j-quants-enterprise-data.resource";
+import { EdinetEnterpriseFilingResource } from "../../resource/edinet/edinet-enterprise-filing.resource";
+import { JQuantsEnterpriseDataResource } from "../../resource/jquants/j-quants-enterprise-data.resource";
 import { DividendAnalysisCsvBatchService } from "./dividend-analysis-csv-batch.service";
 
 @Module({
