@@ -14,6 +14,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "update-csv": "ts-node -r tsconfig-paths/register src/scripts/update-enterprise-dividend-csv.ts",
     "lint": "biome lint --fix .",
     "test": "jest",
     "test:watch": "jest --watch",
