@@ -48,8 +48,7 @@ cp .env.example .env
 | `JQUANTS_ID_TOKEN` | empty | J-Quants API access token。Git管理しない |
 | `EDINET_API_BASE_URL` | `https://disclosure2.edinet-fsa.go.jp/api/v2` | EDINET API base URL |
 | `EDINET_API_KEY` | empty | EDINET API key。Git管理しない |
-| `HIGH_DIVIDEND_CANDIDATE_URL` | empty | 高配当候補リストを取得するremote URL。未設定または取得失敗時はcandidate CSV fallback |
-| `HIGH_DIVIDEND_CANDIDATE_CSV_PATH` | `private-data/enterprises/high-dividend-candidates.csv` | high dividend candidate fetcherのfallback CSV |
+| `HIGH_DIVIDEND_CANDIDATE_CSV_PATH` | `private-data/enterprises/high-dividend-candidates.csv` | manual batchが読む候補CSV |
 
 Environment values are validated during application startup. Logs are emitted
 as JSON to stdout. Access logs include a request ID, method, query-free path,
@@ -70,7 +69,7 @@ Detailed design and operational guarantees are documented in
 | File / directory | Git管理 | 用途 |
 | --- | --- | --- |
 | `.data/enterprises/unified-dividend-analysis.csv` | しない | BFF APIが読むgenerated unified CSVのdefault出力先 |
-| `private-data/enterprises/high-dividend-candidates.csv` | しない | remote候補取得に失敗した場合のfallback候補CSV |
+| `private-data/enterprises/high-dividend-candidates.csv` | しない | manual batchが読む候補CSV |
 | `private-data/enterprises/raw/` | しない | batchが候補リストなどのraw/debug用ファイルを書き出す場所 |
 | `test/fixtures/enterprises/*.csv` | する | unit/e2e test用の小さいfixture。実データやsecretは入れない |
 
@@ -95,9 +94,8 @@ JQUANTS_ID_TOKEN=...
 EDINET_API_KEY=...
 ```
 
-`HIGH_DIVIDEND_CANDIDATE_URL` を設定するとremote候補リストを取得します。未設定、
-またはremote取得に失敗した場合は `HIGH_DIVIDEND_CANDIDATE_CSV_PATH` を読みます。
-fallback CSVは、4桁証券コードを含む行であれば読み取れます。
+manual batchは `HIGH_DIVIDEND_CANDIDATE_CSV_PATH` の候補CSVを読みます。
+候補CSVは、4桁証券コードを含む行であれば読み取れます。
 
 例:
 
@@ -113,7 +111,7 @@ symbolId
 実データ更新時に人間が直接入力・編集するのは、次の3種類です。
 
 1. `.env` にcredentialと入出力pathを入力する。
-2. 必要に応じてfallback候補CSVに4桁証券コードを入力する。
+2. 必要に応じて候補CSVに4桁証券コードを入力する。
 3. batch生成後のgenerated unified CSVを確認し、TODO理由が残った列だけ補完する。
 
 #### 1. `.env` を編集する
@@ -134,15 +132,8 @@ ENTERPRISE_DIVIDEND_RAW_DIR=private-data/enterprises/raw
 HIGH_DIVIDEND_CANDIDATE_CSV_PATH=private-data/enterprises/high-dividend-candidates.csv
 ```
 
-remoteの候補リストを使う場合だけ、次も入力します。
+#### 2. 候補CSVを入力する
 
-```env
-HIGH_DIVIDEND_CANDIDATE_URL=<候補リストCSVまたはページのURL>
-```
-
-#### 2. fallback候補CSVを入力する
-
-`HIGH_DIVIDEND_CANDIDATE_URL` を使わない場合、またはremote取得に失敗した場合に備えて、
 `private-data/enterprises/high-dividend-candidates.csv` を作ります。
 
 ```csv

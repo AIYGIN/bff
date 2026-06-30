@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { AppConfigService } from "../../common/config/app-config.service";
 import type {
   EdinetFinancialDataEntity,
+  HighDividendCandidateEntity,
   JQuantsEnterpriseDataEntity,
 } from "../../entity/enterprises/dividend-data-source.entity";
-import { EdinetEnterpriseFilingResource } from "../../resource/enterprises/edinet-enterprise-filing.resource";
-import { HighDividendCandidateResource } from "../../resource/enterprises/high-dividend-candidate.resource";
-import { JQuantsEnterpriseDataResource } from "../../resource/enterprises/j-quants-enterprise-data.resource";
+import { EdinetEnterpriseFilingResource } from "../../resource/enterprises/edinet/edinet-enterprise-filing.resource";
+import { JQuantsEnterpriseDataResource } from "../../resource/enterprises/jquants/j-quants-enterprise-data.resource";
 
 interface GeneratedDividendAnalysisCsvRow {
   scoreVersion: string;
@@ -71,14 +71,16 @@ const CSV_HEADERS: Array<keyof GeneratedDividendAnalysisCsvRow> = [
 export class DividendAnalysisCsvBatchService {
   constructor(
     private readonly config: AppConfigService,
-    private readonly candidateResource: HighDividendCandidateResource,
     private readonly jquantsResource: JQuantsEnterpriseDataResource,
     private readonly edinetResource: EdinetEnterpriseFilingResource,
   ) {}
 
   async updateCsv(): Promise<UpdateDividendAnalysisCsvResult> {
     const asOf = new Date().toISOString().slice(0, 10);
-    const candidates = await this.candidateResource.fetchTopCandidates(50);
+    const candidates = readCandidateCsv(
+      this.config.highDividendCandidateCsvPath,
+      50,
+    );
     const jquantsData = await this.jquantsResource.fetchEnterpriseData(
       candidates.map((candidate) => candidate.symbolId),
       asOf,
@@ -208,6 +210,28 @@ export const csvFromRows = (rows: GeneratedDividendAnalysisCsvRow[]): string =>
 
 const quoteCsv = (value: string): string =>
   /[",\n\r]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+
+export const parseCandidateText = (
+  text: string,
+): HighDividendCandidateEntity[] => {
+  const seen = new Set<string>();
+  const candidates: HighDividendCandidateEntity[] = [];
+  for (const match of text.matchAll(/(?<!\d)(\d{4})(?!\d)/g)) {
+    const symbolId = match[1];
+    if (seen.has(symbolId)) {
+      continue;
+    }
+    seen.add(symbolId);
+    candidates.push({ symbolId, rank: candidates.length + 1 });
+  }
+  return candidates;
+};
+
+const readCandidateCsv = (
+  candidateCsvPath: string,
+  limit: number,
+): HighDividendCandidateEntity[] =>
+  parseCandidateText(readFileSync(candidateCsvPath, "utf8")).slice(0, limit);
 
 const missingFieldsFor = (
   jquants: JQuantsEnterpriseDataEntity,

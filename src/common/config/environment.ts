@@ -40,7 +40,6 @@ export interface EnvironmentVariables {
   JQUANTS_ID_TOKEN: string | null;
   EDINET_API_BASE_URL: string;
   EDINET_API_KEY: string | null;
-  HIGH_DIVIDEND_CANDIDATE_URL: string | null;
   HIGH_DIVIDEND_CANDIDATE_CSV_PATH: string;
 }
 
@@ -327,11 +326,6 @@ export const validateEnvironment = (
     "EDINET_API_KEY",
     environment.EDINET_API_KEY,
   );
-  const highDividendCandidateUrl = parseOptionalUrl(
-    "HIGH_DIVIDEND_CANDIDATE_URL",
-    environment.HIGH_DIVIDEND_CANDIDATE_URL,
-    rawNodeEnv,
-  );
   const highDividendCandidateCsvPath =
     parseOptionalNonEmpty(
       "HIGH_DIVIDEND_CANDIDATE_CSV_PATH",
@@ -393,7 +387,6 @@ export const validateEnvironment = (
     JQUANTS_ID_TOKEN: jquantsIdToken,
     EDINET_API_BASE_URL: edinetApiBaseUrl,
     EDINET_API_KEY: edinetApiKey,
-    HIGH_DIVIDEND_CANDIDATE_URL: highDividendCandidateUrl,
     HIGH_DIVIDEND_CANDIDATE_CSV_PATH: highDividendCandidateCsvPath,
   };
 };

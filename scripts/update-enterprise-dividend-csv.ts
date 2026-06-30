@@ -1,11 +1,14 @@
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../app.module";
-import { DividendAnalysisCsvBatchService } from "../service/enterprises/dividend-analysis-csv-batch.service";
+import { EnterprisesBatchModule } from "../src/batch/enterprises/enterprises-batch.module";
+import { DividendAnalysisCsvBatchService } from "../src/batch/enterprises/dividend-analysis-csv-batch.service";
 
 const run = async (): Promise<void> => {
-  const app = await NestFactory.createApplicationContext(AppModule, {
-    logger: false,
-  });
+  const app = await NestFactory.createApplicationContext(
+    EnterprisesBatchModule,
+    {
+      logger: false,
+    },
+  );
   try {
     const service = app.get(DividendAnalysisCsvBatchService);
     const result = await service.updateCsv();

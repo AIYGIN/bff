@@ -1,23 +1,34 @@
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DividendAnalysisCsvBatchService } from "./dividend-analysis-csv-batch.service";
+import {
+  DividendAnalysisCsvBatchService,
+  parseCandidateText,
+} from "./dividend-analysis-csv-batch.service";
 
 describe("DividendAnalysisCsvBatchService", () => {
+  it("extracts unique local candidate symbols in order", () => {
+    expect(
+      parseCandidateText("symbolId\n2914\n8306\n2914 duplicate\n9432"),
+    ).toEqual([
+      { symbolId: "2914", rank: 1 },
+      { symbolId: "8306", rank: 2 },
+      { symbolId: "9432", rank: 3 },
+    ]);
+  });
+
   it("generates deterministic unified CSV from provider resources", async () => {
     const directory = mkdtempSync(join(tmpdir(), "dividend-csv-"));
     const outputPath = join(directory, "generated", "unified.csv");
     const rawDir = join(directory, "raw");
+    const candidateCsvPath = join(directory, "candidates.csv");
+    writeFileSync(candidateCsvPath, "symbolId\n2914\n", "utf8");
     const service = new DividendAnalysisCsvBatchService(
       {
         enterpriseDividendAnalysisCsvPath: outputPath,
         enterpriseDividendRawDir: rawDir,
         enterpriseDividendScoreVersion: "dividend-score-v1",
-      } as never,
-      {
-        fetchTopCandidates: jest
-          .fn()
-          .mockResolvedValue([{ symbolId: "2914", rank: 1 }]),
+        highDividendCandidateCsvPath: candidateCsvPath,
       } as never,
       {
         fetchEnterpriseData: jest.fn().mockResolvedValue([
@@ -70,16 +81,14 @@ describe("DividendAnalysisCsvBatchService", () => {
   it("keeps TODO reason in CSV-only metadata while numeric required fields remain importable", async () => {
     const directory = mkdtempSync(join(tmpdir(), "dividend-csv-"));
     const outputPath = join(directory, "generated", "unified.csv");
+    const candidateCsvPath = join(directory, "candidates.csv");
+    writeFileSync(candidateCsvPath, "symbolId\n9999\n", "utf8");
     const service = new DividendAnalysisCsvBatchService(
       {
         enterpriseDividendAnalysisCsvPath: outputPath,
         enterpriseDividendRawDir: join(directory, "raw"),
         enterpriseDividendScoreVersion: "dividend-score-v1",
-      } as never,
-      {
-        fetchTopCandidates: jest
-          .fn()
-          .mockResolvedValue([{ symbolId: "9999", rank: 1 }]),
+        highDividendCandidateCsvPath: candidateCsvPath,
       } as never,
       { fetchEnterpriseData: jest.fn().mockResolvedValue([]) } as never,
       { fetchFinancialData: jest.fn() } as never,

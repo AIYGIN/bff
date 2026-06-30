@@ -47,7 +47,6 @@ describe("validateEnvironment", () => {
       JQUANTS_ID_TOKEN: null,
       EDINET_API_BASE_URL: "https://disclosure2.edinet-fsa.go.jp/api/v2",
       EDINET_API_KEY: null,
-      HIGH_DIVIDEND_CANDIDATE_URL: null,
       HIGH_DIVIDEND_CANDIDATE_CSV_PATH:
         "private-data/enterprises/high-dividend-candidates.csv",
     });
@@ -74,7 +73,6 @@ describe("validateEnvironment", () => {
         JQUANTS_ID_TOKEN: "jquants-token",
         EDINET_API_BASE_URL: "https://edinet.example.com/api/v2",
         EDINET_API_KEY: "edinet-key",
-        HIGH_DIVIDEND_CANDIDATE_URL: "https://example.com/candidates.csv",
         HIGH_DIVIDEND_CANDIDATE_CSV_PATH:
           "private-data/enterprises/candidates.csv",
       }),
@@ -109,7 +107,6 @@ describe("validateEnvironment", () => {
       JQUANTS_ID_TOKEN: "jquants-token",
       EDINET_API_BASE_URL: "https://edinet.example.com/api/v2",
       EDINET_API_KEY: "edinet-key",
-      HIGH_DIVIDEND_CANDIDATE_URL: "https://example.com/candidates.csv",
       HIGH_DIVIDEND_CANDIDATE_CSV_PATH:
         "private-data/enterprises/candidates.csv",
     });
@@ -162,10 +159,6 @@ describe("validateEnvironment", () => {
     ],
     [{ JQUANTS_API_BASE_URL: "not-a-url" }, "JQUANTS_API_BASE_URL"],
     [{ EDINET_API_BASE_URL: "not-a-url" }, "EDINET_API_BASE_URL"],
-    [
-      { HIGH_DIVIDEND_CANDIDATE_URL: "not-a-url" },
-      "HIGH_DIVIDEND_CANDIDATE_URL",
-    ],
     [
       { OAUTH_STATE_SIGNING_SECRET: Buffer.alloc(31).toString("base64url") },
       "OAUTH_STATE_SIGNING_SECRET",

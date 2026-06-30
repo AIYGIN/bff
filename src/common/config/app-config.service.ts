@@ -150,12 +150,6 @@ export class AppConfigService {
     return this.configService.get("EDINET_API_KEY", { infer: true });
   }
 
-  get highDividendCandidateUrl(): string | null {
-    return this.configService.get("HIGH_DIVIDEND_CANDIDATE_URL", {
-      infer: true,
-    });
-  }
-
   get highDividendCandidateCsvPath(): string {
     return this.configService.get("HIGH_DIVIDEND_CANDIDATE_CSV_PATH", {
       infer: true,
