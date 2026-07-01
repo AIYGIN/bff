@@ -79,11 +79,13 @@ export class JQuantsEnterpriseDataResource {
           listedInfo.Sector33CodeName ??
           listedInfo.Sector17CodeName,
       ),
-      dividendYield: numberValue(
-        quote.DividendYield ?? statement.DividendYield,
-      ) ?? percentage(annualDividend, close),
+      dividendYield:
+        numberValue(quote.DividendYield ?? statement.DividendYield) ??
+        percentage(annualDividend, close),
       payoutRatio: numberValue(
-        statement.FPayoutRatioAnn ?? statement.PayoutRatioAnn ?? statement.PayoutRatio,
+        statement.FPayoutRatioAnn ??
+          statement.PayoutRatioAnn ??
+          statement.PayoutRatio,
       ),
       per:
         numberValue(quote.AdjustmentClosePER ?? quote.PER ?? statement.PER) ??
@@ -107,8 +109,10 @@ export class JQuantsEnterpriseDataResource {
   }
 
   private async fetchListedInfoBySymbol(): Promise<Map<string, JsonRecord>> {
-    const response =
-      await this.get<JQuantsListedInfoResponse>("/v2/equities/master", {});
+    const response = await this.get<JQuantsListedInfoResponse>(
+      "/v2/equities/master",
+      {},
+    );
     const records = Array.isArray(response.data) ? response.data : [];
     const listedInfoBySymbol = new Map<string, JsonRecord>();
     for (const record of records) {
@@ -223,7 +227,10 @@ const integerValue = (value: unknown): number | null => {
   return parsed !== null && Number.isInteger(parsed) ? parsed : null;
 };
 
-const ratio = (numerator: number | null, denominator: number | null): number | null =>
+const ratio = (
+  numerator: number | null,
+  denominator: number | null,
+): number | null =>
   numerator !== null && denominator !== null && denominator !== 0
     ? roundNumber(numerator / denominator)
     : null;
