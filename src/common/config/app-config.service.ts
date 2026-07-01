@@ -115,4 +115,48 @@ export class AppConfigService {
       infer: true,
     });
   }
+
+  get enterpriseDividendRawDir(): string {
+    return this.configService.get("ENTERPRISE_DIVIDEND_RAW_DIR", {
+      infer: true,
+    });
+  }
+
+  get enterpriseDividendScoreVersion(): string {
+    return this.configService.get("ENTERPRISE_DIVIDEND_SCORE_VERSION", {
+      infer: true,
+    });
+  }
+
+  get enterpriseDataFetchTimeoutMs(): number {
+    return this.configService.get("ENTERPRISE_DATA_FETCH_TIMEOUT_MS", {
+      infer: true,
+    });
+  }
+
+  get jquantsApiBaseUrl(): string {
+    return this.configService.get("JQUANTS_API_BASE_URL", { infer: true });
+  }
+
+  get jquantsApiKey(): string | null {
+    return this.configService.get("JQUANTS_API_KEY", { infer: true });
+  }
+
+  get jquantsIdToken(): string | null {
+    return this.configService.get("JQUANTS_ID_TOKEN", { infer: true });
+  }
+
+  get edinetApiBaseUrl(): string {
+    return this.configService.get("EDINET_API_BASE_URL", { infer: true });
+  }
+
+  get edinetApiKey(): string | null {
+    return this.configService.get("EDINET_API_KEY", { infer: true });
+  }
+
+  get highDividendCandidateCsvPath(): string {
+    return this.configService.get("HIGH_DIVIDEND_CANDIDATE_CSV_PATH", {
+      infer: true,
+    });
+  }
 }
