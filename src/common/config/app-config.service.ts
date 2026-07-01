@@ -138,6 +138,10 @@ export class AppConfigService {
     return this.configService.get("JQUANTS_API_BASE_URL", { infer: true });
   }
 
+  get jquantsApiKey(): string | null {
+    return this.configService.get("JQUANTS_API_KEY", { infer: true });
+  }
+
   get jquantsIdToken(): string | null {
     return this.configService.get("JQUANTS_ID_TOKEN", { infer: true });
   }

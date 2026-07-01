@@ -8,13 +8,12 @@ describe("JQuantsEnterpriseDataResource", () => {
       .mockReturnValueOnce(
         of({
           data: {
-            info: [
+            data: [
               {
-                Code: "2914",
-                CompanyName: "日本たばこ産業",
-                MarketCodeName: "Prime",
-                Sector33CodeName: "食料品",
-                EDINETCode: "E00492",
+                Code: "29140",
+                CoName: "日本たばこ産業",
+                MktNm: "プライム",
+                S33Nm: "食料品",
               },
             ],
           },
@@ -23,11 +22,10 @@ describe("JQuantsEnterpriseDataResource", () => {
       .mockReturnValueOnce(
         of({
           data: {
-            daily_quotes: [
+            data: [
               {
-                DividendYield: "4.85",
-                PER: "14.2",
-                PBR: "1.55",
+                C: "4000",
+                AdjC: "4000",
               },
             ],
           },
@@ -36,13 +34,16 @@ describe("JQuantsEnterpriseDataResource", () => {
       .mockReturnValueOnce(
         of({
           data: {
-            statements: [
+            data: [
               {
-                PayoutRatio: "72.1",
-                ROE: "10.8",
-                EquityRatio: "52.3",
-                FiscalYear: "2025",
-                CurrentFiscalYearEndDate: "2025-12-31",
+                EPS: "250",
+                BPS: "2000",
+                NP: "100",
+                Eq: "1000",
+                EqAR: "0.523",
+                FDivAnn: "194",
+                FPayoutRatioAnn: "72.1",
+                CurFYEn: "2025-12-31",
               },
             ],
           },
@@ -52,7 +53,8 @@ describe("JQuantsEnterpriseDataResource", () => {
       { get } as never,
       {
         jquantsApiBaseUrl: "https://api.jquants.example/",
-        jquantsIdToken: "token-value",
+        jquantsApiKey: "api-key-value",
+        jquantsIdToken: null,
         enterpriseDataFetchTimeoutMs: 1000,
       } as never,
     );
@@ -63,24 +65,41 @@ describe("JQuantsEnterpriseDataResource", () => {
       {
         symbolId: "2914",
         companyName: "日本たばこ産業",
-        market: "Prime",
+        market: "プライム",
         sector: "食料品",
         dividendYield: 4.85,
         payoutRatio: 72.1,
-        per: 14.2,
-        pbr: 1.55,
-        roe: 10.8,
+        per: 16,
+        pbr: 2,
+        roe: 10,
         equityRatio: 52.3,
-        edinetCode: "E00492",
+        edinetCode: null,
         fiscalYear: 2025,
         fiscalPeriodEnd: "2025-12-31",
         asOf: "2026-06-30",
       },
     ]);
-    expect(get).toHaveBeenCalledWith(
-      "https://api.jquants.example/v1/listed/info?code=2914",
+    expect(get).toHaveBeenNthCalledWith(
+      1,
+      "https://api.jquants.example/v2/equities/master",
       expect.objectContaining({
-        headers: { Authorization: "Bearer token-value" },
+        headers: { "x-api-key": "api-key-value" },
+        maxRedirects: 0,
+      }),
+    );
+    expect(get).toHaveBeenNthCalledWith(
+      2,
+      "https://api.jquants.example/v2/equities/bars/daily?code=2914",
+      expect.objectContaining({
+        headers: { "x-api-key": "api-key-value" },
+        maxRedirects: 0,
+      }),
+    );
+    expect(get).toHaveBeenNthCalledWith(
+      3,
+      "https://api.jquants.example/v2/fins/summary?code=2914",
+      expect.objectContaining({
+        headers: { "x-api-key": "api-key-value" },
         maxRedirects: 0,
       }),
     );

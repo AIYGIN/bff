@@ -37,6 +37,7 @@ export interface EnvironmentVariables {
   ENTERPRISE_DIVIDEND_SCORE_VERSION: string;
   ENTERPRISE_DATA_FETCH_TIMEOUT_MS: number;
   JQUANTS_API_BASE_URL: string;
+  JQUANTS_API_KEY: string | null;
   JQUANTS_ID_TOKEN: string | null;
   EDINET_API_BASE_URL: string;
   EDINET_API_KEY: string | null;
@@ -311,6 +312,10 @@ export const validateEnvironment = (
       environment.JQUANTS_API_BASE_URL ?? "https://api.jquants.com",
       rawNodeEnv,
     ) ?? "https://api.jquants.com/";
+  const jquantsApiKey = parseOptionalNonEmpty(
+    "JQUANTS_API_KEY",
+    environment.JQUANTS_API_KEY,
+  );
   const jquantsIdToken = parseOptionalNonEmpty(
     "JQUANTS_ID_TOKEN",
     environment.JQUANTS_ID_TOKEN,
@@ -384,6 +389,7 @@ export const validateEnvironment = (
     ENTERPRISE_DIVIDEND_SCORE_VERSION: enterpriseDividendScoreVersion,
     ENTERPRISE_DATA_FETCH_TIMEOUT_MS: enterpriseDataFetchTimeoutMs,
     JQUANTS_API_BASE_URL: jquantsApiBaseUrl,
+    JQUANTS_API_KEY: jquantsApiKey,
     JQUANTS_ID_TOKEN: jquantsIdToken,
     EDINET_API_BASE_URL: edinetApiBaseUrl,
     EDINET_API_KEY: edinetApiKey,
