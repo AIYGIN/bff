@@ -38,6 +38,18 @@ describe("validateEnvironment", () => {
       GOOGLE_OAUTH_TIMEOUT_MS: 5000,
       SUPABASE_URL: null,
       SUPABASE_SERVICE_ROLE_KEY: null,
+      ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH:
+        ".data/enterprises/unified-dividend-analysis.csv",
+      ENTERPRISE_DIVIDEND_RAW_DIR: "private-data/enterprises/raw",
+      ENTERPRISE_DIVIDEND_SCORE_VERSION: "dividend-score-v1",
+      ENTERPRISE_DATA_FETCH_TIMEOUT_MS: 10000,
+      JQUANTS_API_BASE_URL: "https://api.jquants.com/",
+      JQUANTS_API_KEY: null,
+      JQUANTS_ID_TOKEN: null,
+      EDINET_API_BASE_URL: "https://disclosure2.edinet-fsa.go.jp/api/v2",
+      EDINET_API_KEY: null,
+      HIGH_DIVIDEND_CANDIDATE_CSV_PATH:
+        "private-data/enterprises/high-dividend-candidates.csv",
     });
   });
 
@@ -53,6 +65,18 @@ describe("validateEnvironment", () => {
         GOOGLE_OAUTH_TIMEOUT_MS: "4999",
         SUPABASE_URL: "https://another-project.supabase.co",
         SUPABASE_SERVICE_ROLE_KEY: "another-supabase-service-role-key",
+        ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH:
+          "private-data/enterprises/generated/unified-dividend-analysis.csv",
+        ENTERPRISE_DIVIDEND_RAW_DIR: "private-data/enterprises/raw-dump",
+        ENTERPRISE_DIVIDEND_SCORE_VERSION: "dividend-score-v2",
+        ENTERPRISE_DATA_FETCH_TIMEOUT_MS: "2000",
+        JQUANTS_API_BASE_URL: "https://jquants.example.com",
+        JQUANTS_API_KEY: "jquants-api-key",
+        JQUANTS_ID_TOKEN: "jquants-token",
+        EDINET_API_BASE_URL: "https://edinet.example.com/api/v2",
+        EDINET_API_KEY: "edinet-key",
+        HIGH_DIVIDEND_CANDIDATE_CSV_PATH:
+          "private-data/enterprises/candidates.csv",
       }),
     ).toEqual({
       NODE_ENV: "production",
@@ -76,6 +100,18 @@ describe("validateEnvironment", () => {
       GOOGLE_OAUTH_TIMEOUT_MS: 4999,
       SUPABASE_URL: "https://another-project.supabase.co/",
       SUPABASE_SERVICE_ROLE_KEY: "another-supabase-service-role-key",
+      ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH:
+        "private-data/enterprises/generated/unified-dividend-analysis.csv",
+      ENTERPRISE_DIVIDEND_RAW_DIR: "private-data/enterprises/raw-dump",
+      ENTERPRISE_DIVIDEND_SCORE_VERSION: "dividend-score-v2",
+      ENTERPRISE_DATA_FETCH_TIMEOUT_MS: 2000,
+      JQUANTS_API_BASE_URL: "https://jquants.example.com/",
+      JQUANTS_API_KEY: "jquants-api-key",
+      JQUANTS_ID_TOKEN: "jquants-token",
+      EDINET_API_BASE_URL: "https://edinet.example.com/api/v2",
+      EDINET_API_KEY: "edinet-key",
+      HIGH_DIVIDEND_CANDIDATE_CSV_PATH:
+        "private-data/enterprises/candidates.csv",
     });
   });
 
@@ -106,6 +142,14 @@ describe("validateEnvironment", () => {
     [{ JWT_ACCESS_TTL_SECONDS: "3601" }, "JWT_ACCESS_TTL_SECONDS"],
     [{ GOOGLE_OAUTH_TIMEOUT_MS: "999" }, "GOOGLE_OAUTH_TIMEOUT_MS"],
     [{ GOOGLE_OAUTH_TIMEOUT_MS: "10001" }, "GOOGLE_OAUTH_TIMEOUT_MS"],
+    [
+      { ENTERPRISE_DATA_FETCH_TIMEOUT_MS: "999" },
+      "ENTERPRISE_DATA_FETCH_TIMEOUT_MS",
+    ],
+    [
+      { ENTERPRISE_DATA_FETCH_TIMEOUT_MS: "30001" },
+      "ENTERPRISE_DATA_FETCH_TIMEOUT_MS",
+    ],
     [{ SUPABASE_URL: "not-a-url" }, "SUPABASE_URL"],
     [{ SUPABASE_URL: "https://user:pass@project.supabase.co" }, "SUPABASE_URL"],
     [
@@ -116,6 +160,8 @@ describe("validateEnvironment", () => {
       { GOOGLE_OAUTH_REDIRECT_URI: "https://example.com/wrong" },
       "GOOGLE_OAUTH_REDIRECT_URI",
     ],
+    [{ JQUANTS_API_BASE_URL: "not-a-url" }, "JQUANTS_API_BASE_URL"],
+    [{ EDINET_API_BASE_URL: "not-a-url" }, "EDINET_API_BASE_URL"],
     [
       { OAUTH_STATE_SIGNING_SECRET: Buffer.alloc(31).toString("base64url") },
       "OAUTH_STATE_SIGNING_SECRET",

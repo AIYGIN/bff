@@ -4,28 +4,63 @@ import { type OpenAPIObject } from "@nestjs/swagger";
 import request from "supertest";
 
 import { configureApp } from "../src/bootstrap";
+import { AppConfigService } from "../src/common/config/app-config.service";
 import { LoggingModule } from "../src/common/logging/logging.module";
 import { AuthService } from "../src/service/auth/auth.service";
 import { AppModule } from "./../src/app.module";
 
+const quantsInfoResponseKeys = [
+  "scoreVersion",
+  "asOf",
+  "sort",
+  "order",
+  "items",
+];
+
+const quantsInfoItemKeys = [
+  "rank",
+  "symbolId",
+  "companyName",
+  "market",
+  "sector",
+  "dividendScore",
+  "dividendYield",
+  "payoutRatio",
+  "per",
+  "pbr",
+  "roe",
+  "equityRatio",
+  "freeCashFlowStatus",
+  "missingFields",
+  "warnings",
+];
+
 const dividendAnalysisResponseKeys = [
   "symbolId",
   "companyName",
-  "sector",
-  "totalScore",
-  "judgement",
-  "safetyLabel",
-  "metrics",
-  "scoreBreakdown",
-  "analysisSummary",
-  "isFinancialBusiness",
-  "isFcfNotApplicable",
-  "dataSources",
-  "updatedAt",
-  "dataAsOfDate",
   "scoreVersion",
-  "isRealtime",
-  "disclaimers",
+  "asOf",
+  "rank",
+  "dividendScore",
+  "metrics",
+  "analysis",
+  "missingFields",
+  "warnings",
+];
+
+const forbiddenPublicTerms = [
+  "API キー",
+  "api key",
+  "apiKey",
+  "jquantsApiKey",
+  "edinetApiKey",
+  "private CSV path",
+  "privateCsvPath",
+  "privateRawPath",
+  "raw path",
+  "rawPath",
+  "raw payload",
+  "rawPayload",
 ];
 
 describe("EnterprisesController (e2e)", () => {
@@ -42,6 +77,12 @@ describe("EnterprisesController (e2e)", () => {
           id: "33333333-3333-3333-3333-333333333333",
         }),
       })
+      .overrideProvider(AppConfigService)
+      .useValue({
+        logLevel: "silent",
+        enterpriseDividendAnalysisCsvPath:
+          "test/fixtures/enterprises/unified-dividend-analysis.csv",
+      })
       .overrideProvider(LoggingModule)
       .useValue({})
       .compile();
@@ -52,167 +93,96 @@ describe("EnterprisesController (e2e)", () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    await app?.close();
   });
 
-  it("GET /enterprises/quantsInfo returns fixed companies", async () => {
+  it("GET /enterprises/quantsInfo returns normalized CSV-backed quants info for query options", async () => {
     const response = await request(app.getHttpServer())
       .get("/enterprises/quantsInfo")
+      .query({
+        limit: 1,
+        sort: "dividendScore",
+        order: "desc",
+        scoreVersion: "dividend-score-v1",
+      })
       .set("Cookie", "access_token=fake-token")
       .expect(200);
 
-    expect(response.body.enterprises).toHaveLength(20);
-    expect(
-      response.body.enterprises.map(
-        (item: { companyName: string }) => item.companyName,
-      ),
-    ).toEqual([
-      "NTT",
-      "KDDI",
-      "ソフトバンク",
-      "三菱商事",
-      "伊藤忠商事",
-      "三井物産",
-      "住友商事",
-      "丸紅",
-      "三菱UFJ FG",
-      "三井住友FG",
-      "みずほFG",
-      "東京海上HD",
-      "MS&AD",
-      "積水ハウス",
-      "オリックス",
-      "JT",
-      "INPEX",
-      "ENEOS HD",
-      "武田薬品工業",
-      "日本製鉄",
-    ]);
-    expect(response.body.enterprises[0]).toEqual({
-      symbolId: "9432",
-      companyName: "NTT",
-      sector: "情報・通信業",
-      rank: 1,
-      totalScore: 92,
-      judgement: "安全寄り",
-      safetyLabel: "safe",
-      scoreBreakdown: {
-        fcf: { score: 30, maxScore: 30, isNotApplicable: false },
-        dividendCutHistory: { score: 20, maxScore: 20, periodYears: 10 },
-        dividendGrowth: { score: 12, maxScore: 15, periodYears: 10 },
-        payoutRatio: { score: 15, maxScore: 15 },
-        dividendYield: { score: 8, maxScore: 10 },
-        financialMetrics: { score: 7, maxScore: 10 },
-      },
-      latestDividendYield: 3.7,
-      isFinancialBusiness: false,
-      isFcfNotApplicable: false,
-      updatedAt: "2026-06-26T00:00:00.000Z",
-      dataAsOfDate: "2026-06-26",
-    });
+    expect(Object.keys(response.body)).toEqual(quantsInfoResponseKeys);
     expect(response.body).toMatchObject({
-      updatedAt: "2026-06-26T00:00:00.000Z",
-      dataAsOfDate: "2026-06-26",
-      isRealtime: false,
-      disclaimers: [
-        "本画面は配当持続性を分析するためのものであり、特定銘柄の売買を推奨するものではありません。",
-      ],
+      scoreVersion: "dividend-score-v1",
+      sort: "dividendScore",
+      order: "desc",
     });
+    expect(response.body.asOf).toEqual(expect.any(String));
+    expect(response.body.items).toHaveLength(1);
+    expect(Object.keys(response.body.items[0])).toEqual(quantsInfoItemKeys);
+    expect(response.body.items[0]).toMatchObject({
+      rank: expect.any(Number),
+      symbolId: expect.any(String),
+      companyName: expect.any(String),
+      market: expect.any(String),
+      sector: expect.any(String),
+      dividendScore: expect.any(Number),
+      dividendYield: expect.any(Number),
+      freeCashFlowStatus: expect.any(String),
+      missingFields: expect.any(Array),
+      warnings: expect.any(Array),
+    });
+    expect(response.body.items[0].rank).toBeGreaterThanOrEqual(1);
+    expect(response.body.items[0].dividendScore).toBeGreaterThanOrEqual(0);
+    expect(response.body.items[0].dividendScore).toBeLessThanOrEqual(100);
+
+    const serializedBody = JSON.stringify(response.body);
+    for (const forbiddenTerm of forbiddenPublicTerms) {
+      expect(serializedBody).not.toContain(forbiddenTerm);
+    }
   });
 
-  it("requires access token", async () => {
+  it("GET /enterprises/quantsInfo requires access token", async () => {
     await request(app.getHttpServer())
       .get("/enterprises/quantsInfo")
       .expect(401);
   });
 
-  it("GET /enterprises/{symbolId}/dividendAnalysis returns fixed dividend analysis detail", async () => {
+  it("GET /enterprises/{symbolId}/dividendAnalysis returns normalized detail for scoreVersion", async () => {
     const response = await request(app.getHttpServer())
-      .get("/enterprises/8058/dividendAnalysis")
+      .get("/enterprises/8306/dividendAnalysis")
+      .query({ scoreVersion: "dividend-score-v1" })
       .set("Cookie", "access_token=fake-token")
       .expect(200);
 
     expect(Object.keys(response.body)).toEqual(dividendAnalysisResponseKeys);
-    expect(response.body).toEqual({
-      symbolId: "8058",
-      companyName: "三菱商事",
-      sector: "商社",
-      totalScore: 89,
-      judgement: "安全寄り",
-      safetyLabel: "safe",
-      metrics: {
-        fcf: 120000000,
-        payoutRatio: 40.9,
-        dividendGrowthRate10y: 8.2,
-        dividendCutCount10y: 0,
-        per: 11.5,
-        pbr: 0.9,
-        roe: 10.3,
-      },
-      scoreBreakdown: {
-        fcf: {
-          score: 24,
-          maxScore: 30,
-          isNotApplicable: false,
-          reason: "3年連続プラス",
-        },
-        dividendCutHistory: {
-          score: 17,
-          maxScore: 20,
-          periodYears: 10,
-          reason: "過去10年で減配なし",
-        },
-        dividendGrowth: {
-          score: 9,
-          maxScore: 15,
-          periodYears: 10,
-          reason: "年平均+8.2%",
-        },
-        payoutRatio: {
-          score: 12,
-          maxScore: 15,
-          reason: "健全な水準",
-        },
-        dividendYield: {
-          score: 8,
-          maxScore: 10,
-          reason: "目安レンジ内",
-        },
-        financialMetrics: {
-          score: 7,
-          maxScore: 10,
-          reason: "PER/PBR/ROEから補助判定",
-        },
-      },
-      analysisSummary: null,
-      isFinancialBusiness: false,
-      isFcfNotApplicable: false,
-      dataSources: [{ name: "J-Quants API mock", asOfDate: "2026-06-26" }],
-      updatedAt: "2026-06-26T00:00:00.000Z",
-      dataAsOfDate: "2026-06-26",
+    expect(response.body).toMatchObject({
+      symbolId: "8306",
+      companyName: expect.any(String),
       scoreVersion: "dividend-score-v1",
-      isRealtime: false,
-      disclaimers: [
-        "本画面は配当持続性を分析するためのものであり、特定銘柄の売買を推奨するものではありません。",
-      ],
+      asOf: expect.any(String),
+      rank: expect.any(Number),
+      dividendScore: expect.any(Number),
+      metrics: expect.any(Object),
+      analysis: expect.any(Object),
+      missingFields: expect.any(Array),
+      warnings: expect.any(Array),
     });
+    expect(response.body.rank).toBeGreaterThanOrEqual(1);
+    expect(response.body.dividendScore).toBeGreaterThanOrEqual(0);
+    expect(response.body.dividendScore).toBeLessThanOrEqual(100);
   });
 
-  it("GET /enterprises/{symbolId}/dividendAnalysis returns nullable FCF for financial businesses", async () => {
+  it("GET /enterprises/{symbolId}/dividendAnalysis returns NOT_APPLICABLE FCF for financial businesses without error", async () => {
     const response = await request(app.getHttpServer())
       .get("/enterprises/8306/dividendAnalysis")
+      .query({ scoreVersion: "dividend-score-v1" })
       .set("Cookie", "access_token=fake-token")
       .expect(200);
 
-    expect(response.body.metrics.fcf).toBeNull();
-    expect(response.body.scoreBreakdown.fcf).toMatchObject({
-      score: null,
-      maxScore: 30,
-      isNotApplicable: true,
-      reason: "金融業はFCFの評価対象外のためN/A",
+    expect(response.body.metrics).toMatchObject({
+      freeCashFlowStatus: "NOT_APPLICABLE",
     });
-    expect(response.body.isFinancialBusiness).toBe(true);
-    expect(response.body.isFcfNotApplicable).toBe(true);
+    expect(response.body.analysis).toEqual(expect.any(Object));
+    expect(response.body.missingFields).toContain("freeCashFlow");
+    expect(response.body.warnings).toEqual(expect.any(Array));
   });
 
   it("GET /enterprises/{symbolId}/dividendAnalysis rejects invalid symbolId", async () => {
@@ -231,17 +201,34 @@ describe("EnterprisesController (e2e)", () => {
 
   it("GET /enterprises/{symbolId}/dividendAnalysis requires access token", async () => {
     await request(app.getHttpServer())
-      .get("/enterprises/8058/dividendAnalysis")
+      .get("/enterprises/8306/dividendAnalysis")
       .expect(401);
   });
 
-  it("exposes quants info OpenAPI schema", () => {
+  it("exposes quants info OpenAPI contract without Entity or secret/raw fields", () => {
     const operation = document.paths["/enterprises/quantsInfo"]?.get;
 
-    expect(operation?.tags).toEqual(["Dividend Analysis"]);
-    expect(operation?.summary).toBe("高配当分析向け企業クオンツ情報一覧取得");
-    expect(operation?.description).toBe(
-      "JWT 認証済みユーザー向けに、保存済みまたは J-Quants API mock 由来の企業クオンツ情報一覧をスコア順で返す。画面リクエスト中に J-Quants API へ同期アクセスしない。未登録銘柄は一覧に含めない。",
+    expect(operation?.tags).toEqual(["enterprises"]);
+    expect(operation?.summary).toBe("高配当候補上位一覧を取得する");
+    expect(operation?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "limit",
+          in: "query",
+          required: false,
+        }),
+        expect.objectContaining({ name: "sort", in: "query", required: false }),
+        expect.objectContaining({
+          name: "order",
+          in: "query",
+          required: false,
+        }),
+        expect.objectContaining({
+          name: "scoreVersion",
+          in: "query",
+          required: false,
+        }),
+      ]),
     );
     expect(operation?.responses).toMatchObject({
       "200": {},
@@ -249,73 +236,65 @@ describe("EnterprisesController (e2e)", () => {
       "401": {},
       "500": {},
     });
-    expect(document.components?.schemas).toHaveProperty(
-      "GetEnterpriseQuantsInfoResponseDto",
-    );
-    expect(document.components?.schemas).toHaveProperty(
-      "EnterpriseQuantInfoDto",
-    );
     expect(
       document.components?.schemas?.GetEnterpriseQuantsInfoResponseDto,
     ).toMatchObject({
       properties: {
-        enterprises: {
+        scoreVersion: { type: "string" },
+        asOf: { type: "string", format: "date" },
+        sort: { type: "string" },
+        order: { type: "string" },
+        items: {
           type: "array",
           items: { $ref: "#/components/schemas/EnterpriseQuantInfoDto" },
         },
-        updatedAt: { type: "string", format: "date-time" },
-        dataAsOfDate: { type: "string", format: "date" },
-        isRealtime: { type: "boolean" },
-        disclaimers: { type: "array", items: { type: "string" } },
       },
-      required: [
-        "enterprises",
-        "updatedAt",
-        "dataAsOfDate",
-        "isRealtime",
-        "disclaimers",
-      ],
+      required: quantsInfoResponseKeys,
     });
     expect(document.components?.schemas?.EnterpriseQuantInfoDto).toMatchObject({
       properties: {
+        rank: { type: "number", minimum: 1 },
         symbolId: { type: "string" },
         companyName: { type: "string" },
-        sector: { type: "string" },
-        rank: { type: "number" },
-        totalScore: { type: "number" },
-        judgement: { type: "string" },
-        safetyLabel: { type: "string" },
-        scoreBreakdown: {
-          allOf: [{ $ref: "#/components/schemas/EnterpriseScoreBreakdownDto" }],
-        },
-        latestDividendYield: { type: "number" },
-        isFinancialBusiness: { type: "boolean" },
-        isFcfNotApplicable: { type: "boolean" },
-        updatedAt: { type: "string", format: "date-time" },
-        dataAsOfDate: { type: "string", format: "date" },
+        dividendScore: { type: "number", minimum: 0, maximum: 100 },
+        dividendYield: { type: "number" },
+        freeCashFlowStatus: { type: "string" },
+        missingFields: { type: "array", items: { type: "string" } },
+        warnings: { type: "array", items: { type: "string" } },
       },
     });
+
+    const serializedDocument = JSON.stringify({
+      operation,
+      schemas: document.components?.schemas,
+    });
     expect(Object.keys(document.components?.schemas ?? {})).not.toContain(
-      "Entity",
+      "EnterpriseQuantInfoEntity",
     );
+    for (const forbiddenTerm of forbiddenPublicTerms) {
+      expect(serializedDocument).not.toContain(forbiddenTerm);
+    }
   });
 
-  it("exposes dividend analysis OpenAPI schema", () => {
+  it("exposes dividend analysis OpenAPI contract without Entity or secret/raw fields", () => {
     const operation =
       document.paths["/enterprises/{symbolId}/dividendAnalysis"]?.get;
 
-    expect(operation?.tags).toEqual(["Dividend Analysis"]);
-    expect(operation?.summary).toBe("高配当分析詳細取得");
-    expect(operation?.description).toBe(
-      "JWT 認証済みユーザー向けに、指定された4桁証券コードの保存済みまたは J-Quants API mock 由来の高配当分析詳細を返す。画面リクエスト中に J-Quants API へ同期アクセスしない。",
-    );
-    expect(operation?.parameters).toContainEqual(
-      expect.objectContaining({
-        name: "symbolId",
-        in: "path",
-        required: true,
-        description: "4桁証券コード。例: 8058, 9432。",
-      }),
+    expect(operation?.tags).toEqual(["enterprises"]);
+    expect(operation?.summary).toBe("指定銘柄の高配当分析を取得する");
+    expect(operation?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "symbolId",
+          in: "path",
+          required: true,
+        }),
+        expect.objectContaining({
+          name: "scoreVersion",
+          in: "query",
+          required: false,
+        }),
+      ]),
     );
     expect(operation?.responses).toMatchObject({
       "200": {},
@@ -324,101 +303,33 @@ describe("EnterprisesController (e2e)", () => {
       "404": {},
       "500": {},
     });
-    expect(document.components?.schemas).toHaveProperty(
-      "GetEnterpriseDividendAnalysisResponseDto",
-    );
     expect(
       document.components?.schemas?.GetEnterpriseDividendAnalysisResponseDto,
     ).toMatchObject({
       properties: {
         symbolId: { type: "string" },
         companyName: { type: "string" },
-        sector: { type: "string" },
-        totalScore: { type: "number" },
-        judgement: { type: "string" },
-        safetyLabel: { type: "string" },
-        metrics: {
-          allOf: [
-            {
-              $ref: "#/components/schemas/EnterpriseDividendAnalysisMetricsDto",
-            },
-          ],
-        },
-        scoreBreakdown: {
-          allOf: [
-            {
-              $ref: "#/components/schemas/EnterpriseDividendAnalysisScoreBreakdownDto",
-            },
-          ],
-        },
-        analysisSummary: { type: "string", nullable: true },
-        isFinancialBusiness: { type: "boolean" },
-        isFcfNotApplicable: { type: "boolean" },
-        dataSources: {
-          type: "array",
-          items: {
-            $ref: "#/components/schemas/EnterpriseDividendAnalysisDataSourceDto",
-          },
-        },
-        updatedAt: { type: "string", format: "date-time" },
-        dataAsOfDate: { type: "string", format: "date" },
         scoreVersion: { type: "string" },
-        isRealtime: { type: "boolean" },
-        disclaimers: { type: "array", items: { type: "string" } },
+        asOf: { type: "string", format: "date" },
+        rank: { type: "number", minimum: 1 },
+        dividendScore: { type: "number", minimum: 0, maximum: 100 },
+        metrics: expect.any(Object),
+        analysis: expect.any(Object),
+        missingFields: { type: "array", items: { type: "string" } },
+        warnings: { type: "array", items: { type: "string" } },
       },
+      required: dividendAnalysisResponseKeys,
     });
-    expect(
-      document.components?.schemas?.EnterpriseDividendAnalysisMetricsDto,
-    ).toMatchObject({
-      properties: {
-        fcf: { type: "number", nullable: true },
-        payoutRatio: { type: "number" },
-        dividendGrowthRate10y: { type: "number" },
-        dividendCutCount10y: { type: "number" },
-        per: { type: "number" },
-        pbr: { type: "number" },
-        roe: { type: "number" },
-      },
-    });
-    expect(
-      document.components?.schemas?.EnterpriseDividendAnalysisFcfScoreDto,
-    ).toMatchObject({
-      properties: {
-        score: { type: "number", nullable: true },
-        maxScore: { type: "number" },
-        isNotApplicable: { type: "boolean" },
-        reason: { type: "string" },
-      },
+
+    const serializedDocument = JSON.stringify({
+      operation,
+      schemas: document.components?.schemas,
     });
     expect(Object.keys(document.components?.schemas ?? {})).not.toContain(
       "EnterpriseDividendAnalysisEntity",
     );
-    const serializedDocument = JSON.stringify({
-      operation,
-      schemas: {
-        EnterpriseDividendAnalysisMetricsDto:
-          document.components?.schemas?.EnterpriseDividendAnalysisMetricsDto,
-        EnterpriseDividendAnalysisFcfScoreDto:
-          document.components?.schemas?.EnterpriseDividendAnalysisFcfScoreDto,
-        EnterpriseDividendAnalysisScoreBreakdownDto:
-          document.components?.schemas
-            ?.EnterpriseDividendAnalysisScoreBreakdownDto,
-        GetEnterpriseDividendAnalysisResponseDto:
-          document.components?.schemas
-            ?.GetEnterpriseDividendAnalysisResponseDto,
-      },
-    });
-    for (const forbiddenField of [
-      "recommendation",
-      "prediction",
-      "buy",
-      "sell",
-      "upside",
-      "targetPrice",
-      "jquantsApiKey",
-      "jquantsApiSecret",
-    ]) {
-      expect(serializedDocument).not.toContain(forbiddenField);
+    for (const forbiddenTerm of forbiddenPublicTerms) {
+      expect(serializedDocument).not.toContain(forbiddenTerm);
     }
   });
 });

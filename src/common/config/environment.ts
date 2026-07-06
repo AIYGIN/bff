@@ -32,6 +32,16 @@ export interface EnvironmentVariables {
   GOOGLE_OAUTH_TIMEOUT_MS: number;
   SUPABASE_URL: string | null;
   SUPABASE_SERVICE_ROLE_KEY: string | null;
+  ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH: string;
+  ENTERPRISE_DIVIDEND_RAW_DIR: string;
+  ENTERPRISE_DIVIDEND_SCORE_VERSION: string;
+  ENTERPRISE_DATA_FETCH_TIMEOUT_MS: number;
+  JQUANTS_API_BASE_URL: string;
+  JQUANTS_API_KEY: string | null;
+  JQUANTS_ID_TOKEN: string | null;
+  EDINET_API_BASE_URL: string;
+  EDINET_API_KEY: string | null;
+  HIGH_DIVIDEND_CANDIDATE_CSV_PATH: string;
 }
 
 const isOneOf = <T extends string>(
@@ -274,6 +284,58 @@ export const validateEnvironment = (
     "SUPABASE_SERVICE_ROLE_KEY",
     environment.SUPABASE_SERVICE_ROLE_KEY,
   );
+  const enterpriseDividendAnalysisCsvPath =
+    parseOptionalNonEmpty(
+      "ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH",
+      environment.ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH,
+    ) ?? ".data/enterprises/unified-dividend-analysis.csv";
+  const enterpriseDividendRawDir =
+    parseOptionalNonEmpty(
+      "ENTERPRISE_DIVIDEND_RAW_DIR",
+      environment.ENTERPRISE_DIVIDEND_RAW_DIR,
+    ) ?? "private-data/enterprises/raw";
+  const enterpriseDividendScoreVersion =
+    parseOptionalNonEmpty(
+      "ENTERPRISE_DIVIDEND_SCORE_VERSION",
+      environment.ENTERPRISE_DIVIDEND_SCORE_VERSION,
+    ) ?? "dividend-score-v1";
+  const enterpriseDataFetchTimeoutMs = parseInteger(
+    "ENTERPRISE_DATA_FETCH_TIMEOUT_MS",
+    environment.ENTERPRISE_DATA_FETCH_TIMEOUT_MS,
+    10000,
+    1000,
+    30000,
+  );
+  const jquantsApiBaseUrl =
+    parseOptionalUrl(
+      "JQUANTS_API_BASE_URL",
+      environment.JQUANTS_API_BASE_URL ?? "https://api.jquants.com",
+      rawNodeEnv,
+    ) ?? "https://api.jquants.com/";
+  const jquantsApiKey = parseOptionalNonEmpty(
+    "JQUANTS_API_KEY",
+    environment.JQUANTS_API_KEY,
+  );
+  const jquantsIdToken = parseOptionalNonEmpty(
+    "JQUANTS_ID_TOKEN",
+    environment.JQUANTS_ID_TOKEN,
+  );
+  const edinetApiBaseUrl =
+    parseOptionalUrl(
+      "EDINET_API_BASE_URL",
+      environment.EDINET_API_BASE_URL ??
+        "https://disclosure2.edinet-fsa.go.jp/api/v2",
+      rawNodeEnv,
+    ) ?? "https://disclosure2.edinet-fsa.go.jp/api/v2/";
+  const edinetApiKey = parseOptionalNonEmpty(
+    "EDINET_API_KEY",
+    environment.EDINET_API_KEY,
+  );
+  const highDividendCandidateCsvPath =
+    parseOptionalNonEmpty(
+      "HIGH_DIVIDEND_CANDIDATE_CSV_PATH",
+      environment.HIGH_DIVIDEND_CANDIDATE_CSV_PATH,
+    ) ?? "private-data/enterprises/high-dividend-candidates.csv";
 
   const productionValues = [
     ["GOOGLE_OAUTH_CLIENT_ID", googleOAuthClientId],
@@ -322,5 +384,15 @@ export const validateEnvironment = (
     GOOGLE_OAUTH_TIMEOUT_MS: googleOAuthTimeoutMs,
     SUPABASE_URL: supabaseUrl,
     SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+    ENTERPRISE_DIVIDEND_ANALYSIS_CSV_PATH: enterpriseDividendAnalysisCsvPath,
+    ENTERPRISE_DIVIDEND_RAW_DIR: enterpriseDividendRawDir,
+    ENTERPRISE_DIVIDEND_SCORE_VERSION: enterpriseDividendScoreVersion,
+    ENTERPRISE_DATA_FETCH_TIMEOUT_MS: enterpriseDataFetchTimeoutMs,
+    JQUANTS_API_BASE_URL: jquantsApiBaseUrl,
+    JQUANTS_API_KEY: jquantsApiKey,
+    JQUANTS_ID_TOKEN: jquantsIdToken,
+    EDINET_API_BASE_URL: edinetApiBaseUrl,
+    EDINET_API_KEY: edinetApiKey,
+    HIGH_DIVIDEND_CANDIDATE_CSV_PATH: highDividendCandidateCsvPath,
   };
 };

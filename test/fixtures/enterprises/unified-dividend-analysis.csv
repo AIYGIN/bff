@@ -1,0 +1,3 @@
+scoreVersion,symbolId,companyName,market,sector,rank,dividendScore,dividendYield,payoutRatio,per,pbr,roe,equityRatio,freeCashFlow,freeCashFlowStatus,edinetCode,fiscalYear,fiscalPeriodEnd,jquantsAsOf,edinetAsOf,missingFields,warnings,notAvailableReason
+dividend-score-v1,2914,日本たばこ産業,Prime,食料品,1,92.4,4.85,72.1,14.2,1.55,10.8,52.3,1234567890,AVAILABLE,E00492,2025,2025-12-31,2026-06-30,2026-06-30,"[]","[]",
+dividend-score-v1,8306,三菱UFJフィナンシャル・グループ,Prime,銀行業,2,88.0,3.45,38.0,11.0,0.85,8.2,4.9,,NOT_APPLICABLE,E03606,2025,2025-03-31,2026-06-30,2026-06-30,"[""freeCashFlow""]","[""financial_sector_fcf_na""]",金融業のためFCFはN/A
