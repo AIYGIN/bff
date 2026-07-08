@@ -48,6 +48,18 @@ const dividendAnalysisResponseKeys = [
   "warnings",
 ];
 
+const aiSummaryResponseKeys = [
+  "symbolId",
+  "companyName",
+  "companyCode",
+  "tweetSummary",
+  "tweetSentimentScore",
+  "commentSummary",
+  "commentSentimentScore",
+  "investmentHints",
+  "investmentIssues",
+];
+
 const forbiddenPublicTerms = [
   "API キー",
   "api key",
@@ -61,6 +73,14 @@ const forbiddenPublicTerms = [
   "rawPath",
   "raw payload",
   "rawPayload",
+  "S3 secret",
+  "s3Secret",
+  "bucket",
+  "Bucket",
+  "s3ObjectKey",
+  "objectKey",
+  "internal path",
+  "internalPath",
 ];
 
 describe("EnterprisesController (e2e)", () => {
@@ -205,6 +225,58 @@ describe("EnterprisesController (e2e)", () => {
       .expect(401);
   });
 
+  it("GET /enterprises/{symbolId}/aiSummary returns the mock AI summary DTO", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/enterprises/8306/aiSummary")
+      .set("Cookie", "access_token=fake-token")
+      .expect(200);
+
+    expect(Object.keys(response.body)).toEqual(aiSummaryResponseKeys);
+    expect(response.body).toMatchObject({
+      symbolId: "8306",
+      companyName: expect.any(String),
+      companyCode: "8306",
+      tweetSummary: expect.any(String),
+      tweetSentimentScore: expect.any(Number),
+      commentSummary: expect.any(String),
+      commentSentimentScore: expect.any(Number),
+      investmentHints: expect.any(String),
+      investmentIssues: expect.any(String),
+    });
+    expect(response.body.tweetSentimentScore).toBeGreaterThanOrEqual(-1);
+    expect(response.body.tweetSentimentScore).toBeLessThanOrEqual(1);
+    expect(response.body.commentSentimentScore).toBeGreaterThanOrEqual(-1);
+    expect(response.body.commentSentimentScore).toBeLessThanOrEqual(1);
+    expect(response.body).not.toHaveProperty("sourceType");
+    expect(response.body).not.toHaveProperty("isInvestmentAdvice");
+    expect(response.body).not.toHaveProperty("fetchedAt");
+
+    const serializedBody = JSON.stringify(response.body);
+    for (const forbiddenTerm of forbiddenPublicTerms) {
+      expect(serializedBody).not.toContain(forbiddenTerm);
+    }
+  });
+
+  it("GET /enterprises/{symbolId}/aiSummary rejects invalid symbolId", async () => {
+    await request(app.getHttpServer())
+      .get("/enterprises/abc/aiSummary")
+      .set("Cookie", "access_token=fake-token")
+      .expect(400);
+  });
+
+  it("GET /enterprises/{symbolId}/aiSummary returns not found for unavailable AI summary", async () => {
+    await request(app.getHttpServer())
+      .get("/enterprises/9999/aiSummary")
+      .set("Cookie", "access_token=fake-token")
+      .expect(404);
+  });
+
+  it("GET /enterprises/{symbolId}/aiSummary requires access token", async () => {
+    await request(app.getHttpServer())
+      .get("/enterprises/8306/aiSummary")
+      .expect(401);
+  });
+
   it("exposes quants info OpenAPI contract without Entity or secret/raw fields", () => {
     const operation = document.paths["/enterprises/quantsInfo"]?.get;
 
@@ -327,6 +399,84 @@ describe("EnterprisesController (e2e)", () => {
     });
     expect(Object.keys(document.components?.schemas ?? {})).not.toContain(
       "EnterpriseDividendAnalysisEntity",
+    );
+    for (const forbiddenTerm of forbiddenPublicTerms) {
+      expect(serializedDocument).not.toContain(forbiddenTerm);
+    }
+  });
+
+  it("exposes ai summary OpenAPI contract without Entity or secret/raw fields", () => {
+    const operation = document.paths["/enterprises/{symbolId}/aiSummary"]?.get;
+
+    expect(operation?.tags).toEqual(["enterprises"]);
+    expect(operation?.summary).toBe("指定銘柄のAI要約を取得する");
+    expect(operation?.description).toContain("X投稿・コメント由来のAI要約");
+    expect(operation?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "symbolId",
+          in: "path",
+          required: true,
+        }),
+      ]),
+    );
+    expect(operation?.parameters).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "s3ObjectKey" }),
+        expect.objectContaining({ name: "bucket" }),
+        expect.objectContaining({ name: "prefix" }),
+        expect.objectContaining({ name: "url" }),
+      ]),
+    );
+    expect(operation?.responses).toMatchObject({
+      "200": {},
+      "400": {},
+      "401": {},
+      "404": {},
+      "500": {},
+    });
+    expect(
+      document.components?.schemas?.GetEnterpriseAiSummaryResponseDto,
+    ).toMatchObject({
+      properties: {
+        symbolId: { type: "string" },
+        companyName: { type: "string" },
+        companyCode: { type: "string" },
+        tweetSummary: { type: "string", nullable: true },
+        tweetSentimentScore: {
+          type: "number",
+          minimum: -1,
+          maximum: 1,
+          nullable: true,
+        },
+        commentSummary: { type: "string", nullable: true },
+        commentSentimentScore: {
+          type: "number",
+          minimum: -1,
+          maximum: 1,
+          nullable: true,
+        },
+        investmentHints: { type: "string", nullable: true },
+        investmentIssues: { type: "string", nullable: true },
+      },
+      required: aiSummaryResponseKeys,
+    });
+
+    const aiSummarySchema =
+      document.components?.schemas?.GetEnterpriseAiSummaryResponseDto;
+    const aiSummaryProperties = (
+      aiSummarySchema as { properties?: Record<string, unknown> } | undefined
+    )?.properties;
+    expect(aiSummaryProperties).not.toHaveProperty("sourceType");
+    expect(aiSummaryProperties).not.toHaveProperty("isInvestmentAdvice");
+    expect(aiSummaryProperties).not.toHaveProperty("fetchedAt");
+
+    const serializedDocument = JSON.stringify({
+      operation,
+      schemas: document.components?.schemas,
+    });
+    expect(Object.keys(document.components?.schemas ?? {})).not.toContain(
+      "EnterpriseAiSummaryEntity",
     );
     for (const forbiddenTerm of forbiddenPublicTerms) {
       expect(serializedDocument).not.toContain(forbiddenTerm);

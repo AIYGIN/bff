@@ -8,9 +8,11 @@ import {
 } from "@nestjs/common";
 
 import {
+  GetEnterpriseAiSummaryDocs,
   GetEnterpriseDividendAnalysisDocs,
   GetEnterpriseQuantsInfoDocs,
 } from "../../docs/enterprises.docs";
+import { GetEnterpriseAiSummaryResponseDto } from "../../dto/enterprises/get-enterprise-ai-summary-response.dto";
 import { GetEnterpriseDividendAnalysisResponseDto } from "../../dto/enterprises/get-enterprise-dividend-analysis-response.dto";
 import {
   GetEnterpriseDividendAnalysisQueryDto,
@@ -46,5 +48,19 @@ export class EnterprisesController {
     }
 
     return this.enterprisesService.getDividendAnalysis(symbolId, query);
+  }
+
+  @Get(":symbolId/aiSummary")
+  @GetEnterpriseAiSummaryDocs()
+  getAiSummary(
+    @Param("symbolId") symbolId: string,
+  ): GetEnterpriseAiSummaryResponseDto {
+    if (!/^\d{4}$/.test(symbolId)) {
+      throw new BadRequestException(
+        "symbolId must be a 4-digit securities code",
+      );
+    }
+
+    return this.enterprisesService.getAiSummary(symbolId);
   }
 }

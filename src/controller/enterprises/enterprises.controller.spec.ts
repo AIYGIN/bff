@@ -8,7 +8,9 @@ import { EnterprisesController } from "./enterprises.controller";
 type EnterprisesServiceMock = Pick<
   EnterprisesService,
   "getQuantsInfo" | "getDividendAnalysis"
->;
+> & {
+  getAiSummary: jest.Mock;
+};
 
 const quantsInfoResponse = {
   scoreVersion: "dividend-score-v1",
@@ -49,6 +51,18 @@ const dividendAnalysisResponse = {
   warnings: ["金融業はFCFの評価対象外のためN/A"],
 };
 
+const aiSummaryResponse = {
+  symbolId: "8306",
+  companyName: "三菱UFJ FG",
+  companyCode: "8306",
+  tweetSummary: "配当方針と業績安定性への期待が多く見られます。",
+  tweetSentimentScore: 0.72,
+  commentSummary: "株主還元と金利影響への関心が集まっています。",
+  commentSentimentScore: 0.64,
+  investmentHints: "安定配当と金融環境の変化を合わせて確認する。",
+  investmentIssues: "金利変動や与信費用の増加に注意する。",
+};
+
 const callGetQuantsInfo = (
   controller: EnterprisesController,
   query?: unknown,
@@ -67,6 +81,16 @@ const callGetDividendAnalysis = (
     ) => unknown
   )(symbolId, query);
 
+const callGetAiSummary = (
+  controller: EnterprisesController,
+  symbolId: string,
+): unknown =>
+  (
+    controller as unknown as {
+      getAiSummary: (symbolId: string) => unknown;
+    }
+  ).getAiSummary(symbolId);
+
 describe("EnterprisesController", () => {
   let controller: EnterprisesController;
   let enterprisesService: jest.Mocked<EnterprisesServiceMock>;
@@ -75,6 +99,7 @@ describe("EnterprisesController", () => {
     enterprisesService = {
       getQuantsInfo: jest.fn().mockReturnValue(quantsInfoResponse),
       getDividendAnalysis: jest.fn().mockReturnValue(dividendAnalysisResponse),
+      getAiSummary: jest.fn().mockReturnValue(aiSummaryResponse),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -153,5 +178,31 @@ describe("EnterprisesController", () => {
       BadRequestException,
     );
     expect(enterprisesService.getDividendAnalysis).not.toHaveBeenCalled();
+  });
+
+  it("passes aiSummary path to its corresponding service and returns the DTO", () => {
+    const response = callGetAiSummary(controller, "8306");
+
+    expect(enterprisesService.getAiSummary).toHaveBeenCalledTimes(1);
+    expect(enterprisesService.getAiSummary).toHaveBeenCalledWith("8306");
+    expect(response).toBe(aiSummaryResponse);
+  });
+
+  it("propagates aiSummary not found from the corresponding service", () => {
+    enterprisesService.getAiSummary.mockImplementation(() => {
+      throw new NotFoundException("AI summary not found");
+    });
+
+    expect(() => callGetAiSummary(controller, "9999")).toThrow(
+      NotFoundException,
+    );
+    expect(enterprisesService.getAiSummary).toHaveBeenCalledWith("9999");
+  });
+
+  it("rejects non-4-digit aiSummary symbolId before calling the service", () => {
+    expect(() => callGetAiSummary(controller, "abc")).toThrow(
+      BadRequestException,
+    );
+    expect(enterprisesService.getAiSummary).not.toHaveBeenCalled();
   });
 });

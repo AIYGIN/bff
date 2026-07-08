@@ -724,6 +724,7 @@ describe("Users API (e2e)", () => {
     expect(Object.keys(document.paths)).toEqual([
       "/enterprises/quantsInfo",
       "/enterprises/{symbolId}/dividendAnalysis",
+      "/enterprises/{symbolId}/aiSummary",
       "/auth/google/login",
       "/auth/google/callback",
       "/auth/me",
