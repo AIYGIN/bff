@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { type DividendAnalysisEntity } from "../../entity/enterprises/dividend-analysis.entity";
+import { GetEnterpriseAiSummaryResponseDto } from "../../dto/enterprises/get-enterprise-ai-summary-response.dto";
 import { GetEnterpriseDividendAnalysisResponseDto } from "../../dto/enterprises/get-enterprise-dividend-analysis-response.dto";
 import {
   type EnterpriseQuantsInfoOrder,
@@ -15,6 +16,17 @@ import { calculateDividendAnalysis } from "../../utility/enterprises/dividend-sc
 const DEFAULT_LIMIT = 50;
 const DEFAULT_SORT: EnterpriseQuantsInfoSort = "dividendScore";
 const DEFAULT_ORDER: EnterpriseQuantsInfoOrder = "desc";
+const MOCK_AI_SUMMARY = new GetEnterpriseAiSummaryResponseDto({
+  symbolId: "8306",
+  companyName: "三菱UFJ FG",
+  companyCode: "8306",
+  tweetSummary: "配当方針と業績安定性への期待が多く見られます。",
+  tweetSentimentScore: 0.72,
+  commentSummary: "株主還元と金利影響への関心が集まっています。",
+  commentSentimentScore: 0.64,
+  investmentHints: "安定配当と金融環境の変化を合わせて確認する。",
+  investmentIssues: "金利変動や与信費用の増加に注意する。",
+});
 
 @Injectable()
 export class EnterprisesService {
@@ -87,6 +99,14 @@ export class EnterprisesService {
       missingFields: dividendAnalysis.missingFields,
       warnings: dividendAnalysis.warnings,
     });
+  }
+
+  getAiSummary(symbolId: string): GetEnterpriseAiSummaryResponseDto {
+    if (symbolId !== MOCK_AI_SUMMARY.symbolId) {
+      throw new NotFoundException("AI summary not found");
+    }
+
+    return new GetEnterpriseAiSummaryResponseDto(MOCK_AI_SUMMARY);
   }
 }
 

@@ -95,6 +95,12 @@ const callGetDividendAnalysis = (
     ) => unknown
   )(symbolId, query);
 
+const callGetAiSummary = (
+  service: EnterprisesService,
+  symbolId: string,
+): unknown =>
+  (service.getAiSummary as unknown as (symbolId: string) => unknown)(symbolId);
+
 describe("EnterprisesService", () => {
   let service: EnterprisesService;
   let resource: UnifiedDividendAnalysisResourceMock;
@@ -212,5 +218,25 @@ describe("EnterprisesService", () => {
         scoreVersion: "dividend-score-v1",
       }),
     ).toThrow(NotFoundException);
+  });
+
+  it("returns the fixed AI summary DTO for the supported mock symbolId", () => {
+    const response = callGetAiSummary(service, "8306");
+
+    expect(response).toEqual({
+      symbolId: "8306",
+      companyName: "三菱UFJ FG",
+      companyCode: "8306",
+      tweetSummary: "配当方針と業績安定性への期待が多く見られます。",
+      tweetSentimentScore: 0.72,
+      commentSummary: "株主還元と金利影響への関心が集まっています。",
+      commentSentimentScore: 0.64,
+      investmentHints: "安定配当と金融環境の変化を合わせて確認する。",
+      investmentIssues: "金利変動や与信費用の増加に注意する。",
+    });
+  });
+
+  it("throws not found when AI summary is unavailable for the symbolId", () => {
+    expect(() => callGetAiSummary(service, "9999")).toThrow(NotFoundException);
   });
 });
