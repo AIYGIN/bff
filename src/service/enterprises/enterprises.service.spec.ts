@@ -1,5 +1,6 @@
 import { NotFoundException } from "@nestjs/common";
 
+import { type EnterpriseAiSummaryEntity } from "../../entity/enterprises/enterprise-ai-summary.entity";
 import { EnterprisesService } from "./enterprises.service";
 
 type UnifiedDividendAnalysisResourceMock = {
@@ -7,6 +8,10 @@ type UnifiedDividendAnalysisResourceMock = {
   findOne: jest.Mock;
   findManyFromJQuantsApiMock: jest.Mock;
   findOneDividendAnalysisFromJQuantsApiMock: jest.Mock;
+};
+
+type EnterpriseAiSummaryResourceMock = {
+  findOne: jest.Mock<Promise<EnterpriseAiSummaryEntity | null>, [string]>;
 };
 
 const normalizedEntities = [
@@ -95,15 +100,10 @@ const callGetDividendAnalysis = (
     ) => unknown
   )(symbolId, query);
 
-const callGetAiSummary = (
-  service: EnterprisesService,
-  symbolId: string,
-): unknown =>
-  (service.getAiSummary as unknown as (symbolId: string) => unknown)(symbolId);
-
 describe("EnterprisesService", () => {
   let service: EnterprisesService;
   let resource: UnifiedDividendAnalysisResourceMock;
+  let aiSummaryResource: EnterpriseAiSummaryResourceMock;
 
   beforeEach(() => {
     resource = {
@@ -121,7 +121,23 @@ describe("EnterprisesService", () => {
           return symbolId === "8306" ? legacyEnterprise : null;
         }),
     };
-    service = new EnterprisesService(resource as never);
+    aiSummaryResource = {
+      findOne: jest.fn().mockResolvedValue({
+        symbolId: "8306",
+        companyName: "三菱UFJ FG",
+        companyCode: "8306",
+        tweetSummary: "配当方針と業績安定性への期待が多く見られます。",
+        tweetSentimentScore: 72,
+        commentSummary: "株主還元と金利影響への関心が集まっています。",
+        commentSentimentScore: 64,
+        investmentHints: "安定配当と金融環境の変化を合わせて確認する。",
+        investmentIssues: "金利変動や与信費用の増加に注意する。",
+      }),
+    };
+    service = new EnterprisesService(
+      resource as never,
+      aiSummaryResource as never,
+    );
   });
 
   it("calls the unified CSV resource and maps normalized entities to the quantsInfo DTO", () => {
@@ -220,9 +236,10 @@ describe("EnterprisesService", () => {
     ).toThrow(NotFoundException);
   });
 
-  it("returns the fixed AI summary DTO for the supported mock symbolId", () => {
-    const response = callGetAiSummary(service, "8306");
+  it("calls the AI summary resource and maps its entity to the public DTO", async () => {
+    const response = await service.getAiSummary("8306");
 
+    expect(aiSummaryResource.findOne).toHaveBeenCalledWith("8306");
     expect(response).toEqual({
       symbolId: "8306",
       companyName: "三菱UFJ FG",
@@ -236,7 +253,36 @@ describe("EnterprisesService", () => {
     });
   });
 
-  it("throws not found when AI summary is unavailable for the symbolId", () => {
-    expect(() => callGetAiSummary(service, "9999")).toThrow(NotFoundException);
+  it("preserves null AI summary sentiment scores in the public DTO", async () => {
+    aiSummaryResource.findOne.mockResolvedValue({
+      symbolId: "8306",
+      companyName: "三菱UFJ FG",
+      companyCode: "8306",
+      tweetSummary: null,
+      tweetSentimentScore: null,
+      commentSummary: null,
+      commentSentimentScore: null,
+      investmentHints: null,
+      investmentIssues: null,
+    });
+
+    const response = await service.getAiSummary("8306");
+
+    expect(response).toMatchObject({
+      tweetSummary: null,
+      tweetSentimentScore: null,
+      commentSummary: null,
+      commentSentimentScore: null,
+      investmentHints: null,
+      investmentIssues: null,
+    });
+  });
+
+  it("throws not found when AI summary is unavailable for the symbolId", async () => {
+    aiSummaryResource.findOne.mockResolvedValue(null as never);
+
+    await expect(service.getAiSummary("9999")).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

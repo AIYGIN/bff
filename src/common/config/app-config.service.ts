@@ -134,6 +134,32 @@ export class AppConfigService {
     });
   }
 
+  get s3Endpoint(): string {
+    return this.configService.get("S3_ENDPOINT", { infer: true });
+  }
+
+  get s3Region(): string {
+    return this.configService.get("S3_REGION", { infer: true });
+  }
+
+  get s3AccessKey(): string | null {
+    return this.configService.get("S3_ACCESS_KEY", { infer: true });
+  }
+
+  get s3SecretKey(): string | null {
+    return this.configService.get("S3_SECRET_KEY", { infer: true });
+  }
+
+  get s3Bucket(): string {
+    return this.configService.get("S3_BUCKET", { infer: true });
+  }
+
+  get s3AiSummaryKeyPrefix(): string {
+    return this.configService.get("S3_AI_SUMMARY_KEY_PREFIX", {
+      infer: true,
+    });
+  }
+
   get jquantsApiBaseUrl(): string {
     return this.configService.get("JQUANTS_API_BASE_URL", { infer: true });
   }

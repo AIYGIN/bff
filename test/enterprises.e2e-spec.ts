@@ -7,6 +7,7 @@ import { configureApp } from "../src/bootstrap";
 import { AppConfigService } from "../src/common/config/app-config.service";
 import { LoggingModule } from "../src/common/logging/logging.module";
 import { AuthService } from "../src/service/auth/auth.service";
+import { S3EnterpriseAiSummaryResource } from "../src/resource/enterprises/s3-enterprise-ai-summary.resource";
 import { AppModule } from "./../src/app.module";
 
 const quantsInfoResponseKeys = [
@@ -88,6 +89,19 @@ describe("EnterprisesController (e2e)", () => {
   let document: OpenAPIObject;
 
   beforeEach(async () => {
+    const aiSummaryResource = {
+      findOne: jest.fn().mockResolvedValue({
+        symbolId: "8306",
+        companyName: "三菱UFJ FG",
+        companyCode: "8306",
+        tweetSummary: "配当方針と業績安定性への期待が多く見られます。",
+        tweetSentimentScore: 72,
+        commentSummary: "株主還元と金利影響への関心が集まっています。",
+        commentSentimentScore: 64,
+        investmentHints: "安定配当と金融環境の変化を合わせて確認する。",
+        investmentIssues: "金利変動や与信費用の増加に注意する。",
+      }),
+    };
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -103,6 +117,8 @@ describe("EnterprisesController (e2e)", () => {
         enterpriseDividendAnalysisCsvPath:
           "test/fixtures/enterprises/unified-dividend-analysis.csv",
       })
+      .overrideProvider(S3EnterpriseAiSummaryResource)
+      .useValue(aiSummaryResource)
       .overrideProvider(LoggingModule)
       .useValue({})
       .compile();
@@ -225,7 +241,7 @@ describe("EnterprisesController (e2e)", () => {
       .expect(401);
   });
 
-  it("GET /enterprises/{symbolId}/aiSummary returns the mock AI summary DTO", async () => {
+  it("GET /enterprises/{symbolId}/aiSummary returns the S3-backed AI summary DTO", async () => {
     const response = await request(app.getHttpServer())
       .get("/enterprises/8306/aiSummary")
       .set("Cookie", "access_token=fake-token")
@@ -247,6 +263,8 @@ describe("EnterprisesController (e2e)", () => {
     expect(response.body.tweetSentimentScore).toBeLessThanOrEqual(1);
     expect(response.body.commentSentimentScore).toBeGreaterThanOrEqual(-1);
     expect(response.body.commentSentimentScore).toBeLessThanOrEqual(1);
+    expect(response.body.tweetSentimentScore).toBe(0.72);
+    expect(response.body.commentSentimentScore).toBe(0.64);
     expect(response.body).not.toHaveProperty("sourceType");
     expect(response.body).not.toHaveProperty("isInvestmentAdvice");
     expect(response.body).not.toHaveProperty("fetchedAt");
@@ -265,6 +283,11 @@ describe("EnterprisesController (e2e)", () => {
   });
 
   it("GET /enterprises/{symbolId}/aiSummary returns not found for unavailable AI summary", async () => {
+    const resource = app.get(S3EnterpriseAiSummaryResource) as {
+      findOne: jest.Mock;
+    };
+    resource.findOne.mockResolvedValueOnce(null);
+
     await request(app.getHttpServer())
       .get("/enterprises/9999/aiSummary")
       .set("Cookie", "access_token=fake-token")

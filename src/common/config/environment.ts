@@ -36,6 +36,12 @@ export interface EnvironmentVariables {
   ENTERPRISE_DIVIDEND_RAW_DIR: string;
   ENTERPRISE_DIVIDEND_SCORE_VERSION: string;
   ENTERPRISE_DATA_FETCH_TIMEOUT_MS: number;
+  S3_ENDPOINT: string;
+  S3_REGION: string;
+  S3_ACCESS_KEY: string | null;
+  S3_SECRET_KEY: string | null;
+  S3_BUCKET: string;
+  S3_AI_SUMMARY_KEY_PREFIX: string;
   JQUANTS_API_BASE_URL: string;
   JQUANTS_API_KEY: string | null;
   JQUANTS_ID_TOKEN: string | null;
@@ -306,6 +312,29 @@ export const validateEnvironment = (
     1000,
     30000,
   );
+  const s3Endpoint =
+    parseOptionalUrl(
+      "S3_ENDPOINT",
+      environment.S3_ENDPOINT ?? "http://localhost:9000",
+      rawNodeEnv,
+    ) ?? "http://localhost:9000/";
+  const s3Region =
+    parseOptionalNonEmpty("S3_REGION", environment.S3_REGION) ?? "us-east-1";
+  const s3AccessKey = parseOptionalNonEmpty(
+    "S3_ACCESS_KEY",
+    environment.S3_ACCESS_KEY,
+  );
+  const s3SecretKey = parseOptionalNonEmpty(
+    "S3_SECRET_KEY",
+    environment.S3_SECRET_KEY,
+  );
+  const s3Bucket =
+    parseOptionalNonEmpty("S3_BUCKET", environment.S3_BUCKET) ?? "company-data";
+  const s3AiSummaryKeyPrefix =
+    parseOptionalNonEmpty(
+      "S3_AI_SUMMARY_KEY_PREFIX",
+      environment.S3_AI_SUMMARY_KEY_PREFIX,
+    ) ?? "";
   const jquantsApiBaseUrl =
     parseOptionalUrl(
       "JQUANTS_API_BASE_URL",
@@ -350,6 +379,8 @@ export const validateEnvironment = (
     ["SUBJECT_DERIVATION_SECRET", subjectDerivationSecret],
     ["SUPABASE_URL", supabaseUrl],
     ["SUPABASE_SERVICE_ROLE_KEY", supabaseServiceRoleKey],
+    ["S3_ACCESS_KEY", s3AccessKey],
+    ["S3_SECRET_KEY", s3SecretKey],
   ] as const;
   for (const [key, value] of productionValues) {
     requireProductionValue(rawNodeEnv, key, value);
@@ -388,6 +419,12 @@ export const validateEnvironment = (
     ENTERPRISE_DIVIDEND_RAW_DIR: enterpriseDividendRawDir,
     ENTERPRISE_DIVIDEND_SCORE_VERSION: enterpriseDividendScoreVersion,
     ENTERPRISE_DATA_FETCH_TIMEOUT_MS: enterpriseDataFetchTimeoutMs,
+    S3_ENDPOINT: s3Endpoint,
+    S3_REGION: s3Region,
+    S3_ACCESS_KEY: s3AccessKey,
+    S3_SECRET_KEY: s3SecretKey,
+    S3_BUCKET: s3Bucket,
+    S3_AI_SUMMARY_KEY_PREFIX: s3AiSummaryKeyPrefix,
     JQUANTS_API_BASE_URL: jquantsApiBaseUrl,
     JQUANTS_API_KEY: jquantsApiKey,
     JQUANTS_ID_TOKEN: jquantsIdToken,

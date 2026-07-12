@@ -44,6 +44,12 @@ cp .env.example .env
 | `ENTERPRISE_DIVIDEND_RAW_DIR` | `private-data/enterprises/raw` | batchが候補リストなどのraw/debug用ファイルを書き出すprivate directory |
 | `ENTERPRISE_DIVIDEND_SCORE_VERSION` | `dividend-score-v1` | generated unified CSVに出力するscore version |
 | `ENTERPRISE_DATA_FETCH_TIMEOUT_MS` | `10000` | J-Quants / EDINET / candidate fetchのtimeout |
+| `S3_ENDPOINT` | `http://localhost:9000` | AI要約CSVを読むMinIO/S3 endpoint |
+| `S3_REGION` | `us-east-1` | AI要約CSVを読むS3 region |
+| `S3_ACCESS_KEY` | empty | MinIO/S3 access key。productionでは必須。Git管理しない |
+| `S3_SECRET_KEY` | empty | MinIO/S3 secret key。productionでは必須。Git管理しない |
+| `S3_BUCKET` | `company-data` | AI要約CSVを読むbucket |
+| `S3_AI_SUMMARY_KEY_PREFIX` | empty | AI要約CSV key prefix。空なら `<symbolId>-aisummary.csv` |
 | `JQUANTS_API_BASE_URL` | `https://api.jquants.com` | J-Quants API base URL |
 | `JQUANTS_ID_TOKEN` | empty | J-Quants API access token。Git管理しない |
 | `EDINET_API_BASE_URL` | `https://disclosure2.edinet-fsa.go.jp/api/v2` | EDINET API base URL |
