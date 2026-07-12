@@ -54,7 +54,7 @@ export class EnterprisesController {
   @GetEnterpriseAiSummaryDocs()
   getAiSummary(
     @Param("symbolId") symbolId: string,
-  ): GetEnterpriseAiSummaryResponseDto {
+  ): Promise<GetEnterpriseAiSummaryResponseDto> {
     if (!/^\d{4}$/.test(symbolId)) {
       throw new BadRequestException(
         "symbolId must be a 4-digit securities code",

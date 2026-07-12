@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
+import { type EnterpriseAiSummaryEntity } from "../../entity/enterprises/enterprise-ai-summary.entity";
 import { type DividendAnalysisEntity } from "../../entity/enterprises/dividend-analysis.entity";
 import { GetEnterpriseAiSummaryResponseDto } from "../../dto/enterprises/get-enterprise-ai-summary-response.dto";
 import { GetEnterpriseDividendAnalysisResponseDto } from "../../dto/enterprises/get-enterprise-dividend-analysis-response.dto";
@@ -10,28 +11,18 @@ import {
   type GetEnterpriseQuantsInfoQueryDto,
 } from "../../dto/enterprises/get-enterprise-quants-info-query.dto";
 import { GetEnterpriseQuantsInfoResponseDto } from "../../dto/enterprises/get-enterprise-quants-info-response.dto";
+import { S3EnterpriseAiSummaryResource } from "../../resource/enterprises/s3-enterprise-ai-summary.resource";
 import { UnifiedCsvEnterpriseDividendAnalysisResource } from "../../resource/enterprises/unified-csv-enterprise-dividend-analysis.resource";
 import { calculateDividendAnalysis } from "../../utility/enterprises/dividend-score-calculator";
 
 const DEFAULT_LIMIT = 50;
 const DEFAULT_SORT: EnterpriseQuantsInfoSort = "dividendScore";
 const DEFAULT_ORDER: EnterpriseQuantsInfoOrder = "desc";
-const MOCK_AI_SUMMARY = new GetEnterpriseAiSummaryResponseDto({
-  symbolId: "8306",
-  companyName: "三菱UFJ FG",
-  companyCode: "8306",
-  tweetSummary: "配当方針と業績安定性への期待が多く見られます。",
-  tweetSentimentScore: 0.72,
-  commentSummary: "株主還元と金利影響への関心が集まっています。",
-  commentSentimentScore: 0.64,
-  investmentHints: "安定配当と金融環境の変化を合わせて確認する。",
-  investmentIssues: "金利変動や与信費用の増加に注意する。",
-});
-
 @Injectable()
 export class EnterprisesService {
   constructor(
     private readonly dividendAnalysisResource: UnifiedCsvEnterpriseDividendAnalysisResource,
+    private readonly aiSummaryResource: S3EnterpriseAiSummaryResource,
   ) {}
 
   getQuantsInfo(
@@ -101,14 +92,37 @@ export class EnterprisesService {
     });
   }
 
-  getAiSummary(symbolId: string): GetEnterpriseAiSummaryResponseDto {
-    if (symbolId !== MOCK_AI_SUMMARY.symbolId) {
+  async getAiSummary(
+    symbolId: string,
+  ): Promise<GetEnterpriseAiSummaryResponseDto> {
+    const aiSummary = await this.aiSummaryResource.findOne(symbolId);
+    if (aiSummary === null) {
       throw new NotFoundException("AI summary not found");
     }
 
-    return new GetEnterpriseAiSummaryResponseDto(MOCK_AI_SUMMARY);
+    return toAiSummaryDto(aiSummary);
   }
 }
+
+const toAiSummaryDto = (
+  entity: EnterpriseAiSummaryEntity,
+): GetEnterpriseAiSummaryResponseDto =>
+  new GetEnterpriseAiSummaryResponseDto({
+    symbolId: entity.symbolId,
+    companyName: entity.companyName,
+    companyCode: entity.companyCode,
+    tweetSummary: entity.tweetSummary,
+    tweetSentimentScore: normalizeSentimentScore(entity.tweetSentimentScore),
+    commentSummary: entity.commentSummary,
+    commentSentimentScore: normalizeSentimentScore(
+      entity.commentSentimentScore,
+    ),
+    investmentHints: entity.investmentHints,
+    investmentIssues: entity.investmentIssues,
+  });
+
+const normalizeSentimentScore = (score: number | null): number | null =>
+  score === null ? null : Number((score / 100).toFixed(4));
 
 const compareEntities = (
   left: DividendAnalysisEntity,
